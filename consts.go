@@ -110,7 +110,7 @@ func (f AccessFlag) String() string {
 	}
 
 	if len(mods) == 0 {
-		return fmt.Sprintf("unknownModifierSet %x", f)
+		return fmt.Sprintf("unknownModifierSet %x", f&0xFFFF)
 	} else {
 		return strings.Join(mods, " ")
 	}
