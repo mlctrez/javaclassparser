@@ -35,11 +35,8 @@ func main() {
 	if true {
 
 		oc, err := exec.Command("javac", "-d", "java", "java/example/Sample.java").CombinedOutput()
-		if err != nil {
-			fmt.Println(string(oc))
-
-			panic(err)
-		}
+		fmt.Println(string(oc))
+		failErr(err)
 
 		jcp := &javaclassparser.ClassParser{}
 		r, err := os.Open("java/example/Sample.class")
