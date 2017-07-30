@@ -97,6 +97,3 @@ func read(path string, rc *zip.ReadCloser) {
 	}
 
 }
-
-// (Lcom/erac/admin/presentation/user/CreateDemographicInfoForm;Lcom/erac/custmgmt/user/ProfiledWebUser;Lcom/erac/custmgmt/user/ProfiledWebUser;ZLcom/erac/arch/inf/common/exception/ArchExceptionContainer;)Lcom/erac/custmgmt/user/ProfiledWebUser;
-// (Lcom/erac/admin/presentation/user/CreateDemographicInfoForm;Lcom/erac/custmgmt/user/ProfiledWebUser;Lcom/erac/custmgmt/user/ProfiledWebUser;ZLcom/erac/arch/inf/common/exception/ArchExceptionContainer;)LcomXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
