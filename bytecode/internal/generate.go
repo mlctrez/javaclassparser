@@ -58,8 +58,8 @@ func main() {
 	}
 	sort.SliceStable(byteCodeLines, sortSlice)
 
-	fmt.Fprintln(out, "func buildOpCodeFunctionMap() map[byte]ByteCodeReader {")
-	fmt.Fprintln(out, "\tm := make(map[byte]ByteCodeReader)")
+	fmt.Fprintln(out, "func buildOpCodeFunctionMap() map[byte]Reader {")
+	fmt.Fprintln(out, "\tm := make(map[byte]Reader)")
 	for _, parts := range byteCodeLines {
 		byteCodeHex := strings.ToUpper(parts[1])
 		fmt.Fprintf(out, "\tm[0x%s] = r%s\n", byteCodeHex, byteCodeHex)
@@ -74,26 +74,26 @@ func main() {
 		upperHex := strings.ToUpper(parts[1])
 
 		if args == 0 {
-			fmt.Fprintf(out, "func r%s(p *uint32, _ io.Reader) (*ByteCode, error) { ", upperHex)
-			fmt.Fprintf(out, "return Simple(%q, p) }\n", parts[0])
+			fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
+			fmt.Fprintf(out, "return Simple(%q, c) }\n", parts[0])
 			continue
 		}
 
 		if args > 0 {
-			fmt.Fprintf(out, "func r%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
-			fmt.Fprintf(out, "return WithArgs(%q, p, r, %t, %d) }\n", parts[0], index, args)
+			fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
+			fmt.Fprintf(out, "return WithArgs(%q, c, %t, %d) }\n", parts[0], index, args)
 			continue
 		}
 
-		fmt.Fprintf(out, "func r%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
+		fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
 
 		switch parts[0]{
 		case "tableswitch":
-			fmt.Fprintf(out, "return TableSwitch(%q, p, r) ", "tableswitch")
+			fmt.Fprintf(out, "return TableSwitch(%q, c.p, c) ", "tableswitch")
 		case "lookupswitch":
-			fmt.Fprintf(out, "return LookupSwitch(%q, p, r) ", "lookupswitch")
+			fmt.Fprintf(out, "return LookupSwitch(%q, c.p, c) ", "lookupswitch")
 		case "wide":
-			fmt.Fprintf(out, "return Wide(%q, p, r) ", "wide")
+			fmt.Fprintf(out, "return Wide(%q, c.p, c) ", "wide")
 		default:
 			panic("unhandled opcode " + parts[0])
 		}
@@ -123,7 +123,4 @@ func determineOpCodeType(args string) (otherBytes int, index bool) {
 
 var fileHeader = `package bytecode
 
-import (
-	"io"
-)
 `

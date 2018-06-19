@@ -1,11 +1,8 @@
 package bytecode
 
-import (
-	"io"
-)
 
-func buildOpCodeFunctionMap() map[byte]ByteCodeReader {
-	m := make(map[byte]ByteCodeReader)
+func buildOpCodeFunctionMap() map[byte]Reader {
+	m := make(map[byte]Reader)
 	m[0x00] = r00
 	m[0x01] = r01
 	m[0x02] = r02
@@ -213,208 +210,208 @@ func buildOpCodeFunctionMap() map[byte]ByteCodeReader {
 	m[0xFF] = rFF
 	return m
 }
-func r00(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("nop", p) }
-func r01(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aconst_null", p) }
-func r02(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_m1", p) }
-func r03(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_0", p) }
-func r04(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_1", p) }
-func r05(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_2", p) }
-func r06(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_3", p) }
-func r07(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_4", p) }
-func r08(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iconst_5", p) }
-func r09(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lconst_0", p) }
-func r0A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lconst_1", p) }
-func r0B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fconst_0", p) }
-func r0C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fconst_1", p) }
-func r0D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fconst_2", p) }
-func r0E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dconst_0", p) }
-func r0F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dconst_1", p) }
-func r10(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("bipush", p, r, false, 1) }
-func r11(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("sipush", p, r, false, 2) }
-func r12(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ldc", p, r, false, 1) }
-func r13(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ldc_w", p, r, true, 2) }
-func r14(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ldc2_w", p, r, true, 2) }
-func r15(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("iload", p, r, false, 1) }
-func r16(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("lload", p, r, false, 1) }
-func r17(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("fload", p, r, false, 1) }
-func r18(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("dload", p, r, false, 1) }
-func r19(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("aload", p, r, false, 1) }
-func r1A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iload_0", p) }
-func r1B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iload_1", p) }
-func r1C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iload_2", p) }
-func r1D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iload_3", p) }
-func r1E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lload_0", p) }
-func r1F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lload_1", p) }
-func r20(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lload_2", p) }
-func r21(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lload_3", p) }
-func r22(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fload_0", p) }
-func r23(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fload_1", p) }
-func r24(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fload_2", p) }
-func r25(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fload_3", p) }
-func r26(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dload_0", p) }
-func r27(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dload_1", p) }
-func r28(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dload_2", p) }
-func r29(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dload_3", p) }
-func r2A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aload_0", p) }
-func r2B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aload_1", p) }
-func r2C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aload_2", p) }
-func r2D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aload_3", p) }
-func r2E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iaload", p) }
-func r2F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("laload", p) }
-func r30(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("faload", p) }
-func r31(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("daload", p) }
-func r32(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aaload", p) }
-func r33(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("baload", p) }
-func r34(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("caload", p) }
-func r35(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("saload", p) }
-func r36(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("istore", p, r, false, 1) }
-func r37(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("lstore", p, r, false, 1) }
-func r38(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("fstore", p, r, false, 1) }
-func r39(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("dstore", p, r, false, 1) }
-func r3A(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("astore", p, r, false, 1) }
-func r3B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("istore_0", p) }
-func r3C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("istore_1", p) }
-func r3D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("istore_2", p) }
-func r3E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("istore_3", p) }
-func r3F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lstore_0", p) }
-func r40(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lstore_1", p) }
-func r41(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lstore_2", p) }
-func r42(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lstore_3", p) }
-func r43(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fstore_0", p) }
-func r44(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fstore_1", p) }
-func r45(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fstore_2", p) }
-func r46(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fstore_3", p) }
-func r47(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dstore_0", p) }
-func r48(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dstore_1", p) }
-func r49(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dstore_2", p) }
-func r4A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dstore_3", p) }
-func r4B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("astore_0", p) }
-func r4C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("astore_1", p) }
-func r4D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("astore_2", p) }
-func r4E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("astore_3", p) }
-func r4F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iastore", p) }
-func r50(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lastore", p) }
-func r51(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fastore", p) }
-func r52(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dastore", p) }
-func r53(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("aastore", p) }
-func r54(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("bastore", p) }
-func r55(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("castore", p) }
-func r56(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("sastore", p) }
-func r57(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("pop", p) }
-func r58(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("pop2", p) }
-func r59(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup", p) }
-func r5A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup_x1", p) }
-func r5B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup_x2", p) }
-func r5C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup2", p) }
-func r5D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup2_x1", p) }
-func r5E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dup2_x2", p) }
-func r5F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("swap", p) }
-func r60(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iadd", p) }
-func r61(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ladd", p) }
-func r62(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fadd", p) }
-func r63(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dadd", p) }
-func r64(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("isub", p) }
-func r65(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lsub", p) }
-func r66(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fsub", p) }
-func r67(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dsub", p) }
-func r68(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("imul", p) }
-func r69(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lmul", p) }
-func r6A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fmul", p) }
-func r6B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dmul", p) }
-func r6C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("idiv", p) }
-func r6D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ldiv", p) }
-func r6E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fdiv", p) }
-func r6F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ddiv", p) }
-func r70(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("irem", p) }
-func r71(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lrem", p) }
-func r72(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("frem", p) }
-func r73(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("drem", p) }
-func r74(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ineg", p) }
-func r75(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lneg", p) }
-func r76(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fneg", p) }
-func r77(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dneg", p) }
-func r78(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ishl", p) }
-func r79(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lshl", p) }
-func r7A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ishr", p) }
-func r7B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lshr", p) }
-func r7C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iushr", p) }
-func r7D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lushr", p) }
-func r7E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("iand", p) }
-func r7F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("land", p) }
-func r80(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ior", p) }
-func r81(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lor", p) }
-func r82(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ixor", p) }
-func r83(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lxor", p) }
-func r84(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("iinc", p, r, false, 2) }
-func r85(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2l", p) }
-func r86(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2f", p) }
-func r87(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2d", p) }
-func r88(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("l2i", p) }
-func r89(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("l2f", p) }
-func r8A(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("l2d", p) }
-func r8B(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("f2i", p) }
-func r8C(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("f2l", p) }
-func r8D(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("f2d", p) }
-func r8E(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("d2i", p) }
-func r8F(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("d2l", p) }
-func r90(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("d2f", p) }
-func r91(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2b", p) }
-func r92(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2c", p) }
-func r93(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("i2s", p) }
-func r94(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lcmp", p) }
-func r95(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fcmpl", p) }
-func r96(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("fcmpg", p) }
-func r97(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dcmpl", p) }
-func r98(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dcmpg", p) }
-func r99(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifeq", p, r, false, 2) }
-func r9A(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifne", p, r, false, 2) }
-func r9B(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("iflt", p, r, false, 2) }
-func r9C(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifge", p, r, false, 2) }
-func r9D(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifgt", p, r, false, 2) }
-func r9E(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifle", p, r, false, 2) }
-func r9F(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmpeq", p, r, false, 2) }
-func rA0(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmpne", p, r, false, 2) }
-func rA1(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmplt", p, r, false, 2) }
-func rA2(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmpge", p, r, false, 2) }
-func rA3(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmpgt", p, r, false, 2) }
-func rA4(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_icmple", p, r, false, 2) }
-func rA5(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_acmpeq", p, r, false, 2) }
-func rA6(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("if_acmpne", p, r, false, 2) }
-func rA7(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("goto", p, r, false, 2) }
-func rA8(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("jsr", p, r, false, 2) }
-func rA9(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ret", p, r, false, 1) }
-func rAA(p *uint32, r io.Reader) (*ByteCode, error) { return TableSwitch("tableswitch", p, r) }
-func rAB(p *uint32, r io.Reader) (*ByteCode, error) { return LookupSwitch("lookupswitch", p, r) }
-func rAC(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("ireturn", p) }
-func rAD(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("lreturn", p) }
-func rAE(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("freturn", p) }
-func rAF(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("dreturn", p) }
-func rB0(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("areturn", p) }
-func rB1(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("return", p) }
-func rB2(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("getstatic", p, r, true, 2) }
-func rB3(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("putstatic", p, r, true, 2) }
-func rB4(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("getfield", p, r, true, 2) }
-func rB5(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("putfield", p, r, true, 2) }
-func rB6(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("invokevirtual", p, r, true, 2) }
-func rB7(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("invokespecial", p, r, true, 2) }
-func rB8(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("invokestatic", p, r, true, 2) }
-func rB9(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("invokeinterface", p, r, true, 4) }
-func rBA(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("invokedynamic", p, r, true, 4) }
-func rBB(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("new", p, r, true, 2) }
-func rBC(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("newarray", p, r, false, 1) }
-func rBD(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("anewarray", p, r, true, 2) }
-func rBE(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("arraylength", p) }
-func rBF(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("athrow", p) }
-func rC0(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("checkcast", p, r, true, 2) }
-func rC1(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("instanceof", p, r, true, 2) }
-func rC2(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("monitorenter", p) }
-func rC3(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("monitorexit", p) }
-func rC4(p *uint32, r io.Reader) (*ByteCode, error) { return Wide("wide", p, r) }
-func rC5(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("multianewarray", p, r, true, 3) }
-func rC6(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifnull", p, r, false, 2) }
-func rC7(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("ifnonnull", p, r, false, 2) }
-func rC8(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("goto_w", p, r, false, 4) }
-func rC9(p *uint32, r io.Reader) (*ByteCode, error) { return WithArgs("jsr_w", p, r, false, 4) }
-func rCA(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("breakpoint", p) }
-func rFE(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("impdep1", p) }
-func rFF(p *uint32, _ io.Reader) (*ByteCode, error) { return Simple("impdep2", p) }
+func r00(c *Context) (*ByteCode, error) { return Simple("nop", c) }
+func r01(c *Context) (*ByteCode, error) { return Simple("aconst_null", c) }
+func r02(c *Context) (*ByteCode, error) { return Simple("iconst_m1", c) }
+func r03(c *Context) (*ByteCode, error) { return Simple("iconst_0", c) }
+func r04(c *Context) (*ByteCode, error) { return Simple("iconst_1", c) }
+func r05(c *Context) (*ByteCode, error) { return Simple("iconst_2", c) }
+func r06(c *Context) (*ByteCode, error) { return Simple("iconst_3", c) }
+func r07(c *Context) (*ByteCode, error) { return Simple("iconst_4", c) }
+func r08(c *Context) (*ByteCode, error) { return Simple("iconst_5", c) }
+func r09(c *Context) (*ByteCode, error) { return Simple("lconst_0", c) }
+func r0A(c *Context) (*ByteCode, error) { return Simple("lconst_1", c) }
+func r0B(c *Context) (*ByteCode, error) { return Simple("fconst_0", c) }
+func r0C(c *Context) (*ByteCode, error) { return Simple("fconst_1", c) }
+func r0D(c *Context) (*ByteCode, error) { return Simple("fconst_2", c) }
+func r0E(c *Context) (*ByteCode, error) { return Simple("dconst_0", c) }
+func r0F(c *Context) (*ByteCode, error) { return Simple("dconst_1", c) }
+func r10(c *Context) (*ByteCode, error) { return WithArgs("bipush", c, false, 1) }
+func r11(c *Context) (*ByteCode, error) { return WithArgs("sipush", c, false, 2) }
+func r12(c *Context) (*ByteCode, error) { return WithArgs("ldc", c, false, 1) }
+func r13(c *Context) (*ByteCode, error) { return WithArgs("ldc_w", c, true, 2) }
+func r14(c *Context) (*ByteCode, error) { return WithArgs("ldc2_w", c, true, 2) }
+func r15(c *Context) (*ByteCode, error) { return WithArgs("iload", c, false, 1) }
+func r16(c *Context) (*ByteCode, error) { return WithArgs("lload", c, false, 1) }
+func r17(c *Context) (*ByteCode, error) { return WithArgs("fload", c, false, 1) }
+func r18(c *Context) (*ByteCode, error) { return WithArgs("dload", c, false, 1) }
+func r19(c *Context) (*ByteCode, error) { return WithArgs("aload", c, false, 1) }
+func r1A(c *Context) (*ByteCode, error) { return Simple("iload_0", c) }
+func r1B(c *Context) (*ByteCode, error) { return Simple("iload_1", c) }
+func r1C(c *Context) (*ByteCode, error) { return Simple("iload_2", c) }
+func r1D(c *Context) (*ByteCode, error) { return Simple("iload_3", c) }
+func r1E(c *Context) (*ByteCode, error) { return Simple("lload_0", c) }
+func r1F(c *Context) (*ByteCode, error) { return Simple("lload_1", c) }
+func r20(c *Context) (*ByteCode, error) { return Simple("lload_2", c) }
+func r21(c *Context) (*ByteCode, error) { return Simple("lload_3", c) }
+func r22(c *Context) (*ByteCode, error) { return Simple("fload_0", c) }
+func r23(c *Context) (*ByteCode, error) { return Simple("fload_1", c) }
+func r24(c *Context) (*ByteCode, error) { return Simple("fload_2", c) }
+func r25(c *Context) (*ByteCode, error) { return Simple("fload_3", c) }
+func r26(c *Context) (*ByteCode, error) { return Simple("dload_0", c) }
+func r27(c *Context) (*ByteCode, error) { return Simple("dload_1", c) }
+func r28(c *Context) (*ByteCode, error) { return Simple("dload_2", c) }
+func r29(c *Context) (*ByteCode, error) { return Simple("dload_3", c) }
+func r2A(c *Context) (*ByteCode, error) { return Simple("aload_0", c) }
+func r2B(c *Context) (*ByteCode, error) { return Simple("aload_1", c) }
+func r2C(c *Context) (*ByteCode, error) { return Simple("aload_2", c) }
+func r2D(c *Context) (*ByteCode, error) { return Simple("aload_3", c) }
+func r2E(c *Context) (*ByteCode, error) { return Simple("iaload", c) }
+func r2F(c *Context) (*ByteCode, error) { return Simple("laload", c) }
+func r30(c *Context) (*ByteCode, error) { return Simple("faload", c) }
+func r31(c *Context) (*ByteCode, error) { return Simple("daload", c) }
+func r32(c *Context) (*ByteCode, error) { return Simple("aaload", c) }
+func r33(c *Context) (*ByteCode, error) { return Simple("baload", c) }
+func r34(c *Context) (*ByteCode, error) { return Simple("caload", c) }
+func r35(c *Context) (*ByteCode, error) { return Simple("saload", c) }
+func r36(c *Context) (*ByteCode, error) { return WithArgs("istore", c, false, 1) }
+func r37(c *Context) (*ByteCode, error) { return WithArgs("lstore", c, false, 1) }
+func r38(c *Context) (*ByteCode, error) { return WithArgs("fstore", c, false, 1) }
+func r39(c *Context) (*ByteCode, error) { return WithArgs("dstore", c, false, 1) }
+func r3A(c *Context) (*ByteCode, error) { return WithArgs("astore", c, false, 1) }
+func r3B(c *Context) (*ByteCode, error) { return Simple("istore_0", c) }
+func r3C(c *Context) (*ByteCode, error) { return Simple("istore_1", c) }
+func r3D(c *Context) (*ByteCode, error) { return Simple("istore_2", c) }
+func r3E(c *Context) (*ByteCode, error) { return Simple("istore_3", c) }
+func r3F(c *Context) (*ByteCode, error) { return Simple("lstore_0", c) }
+func r40(c *Context) (*ByteCode, error) { return Simple("lstore_1", c) }
+func r41(c *Context) (*ByteCode, error) { return Simple("lstore_2", c) }
+func r42(c *Context) (*ByteCode, error) { return Simple("lstore_3", c) }
+func r43(c *Context) (*ByteCode, error) { return Simple("fstore_0", c) }
+func r44(c *Context) (*ByteCode, error) { return Simple("fstore_1", c) }
+func r45(c *Context) (*ByteCode, error) { return Simple("fstore_2", c) }
+func r46(c *Context) (*ByteCode, error) { return Simple("fstore_3", c) }
+func r47(c *Context) (*ByteCode, error) { return Simple("dstore_0", c) }
+func r48(c *Context) (*ByteCode, error) { return Simple("dstore_1", c) }
+func r49(c *Context) (*ByteCode, error) { return Simple("dstore_2", c) }
+func r4A(c *Context) (*ByteCode, error) { return Simple("dstore_3", c) }
+func r4B(c *Context) (*ByteCode, error) { return Simple("astore_0", c) }
+func r4C(c *Context) (*ByteCode, error) { return Simple("astore_1", c) }
+func r4D(c *Context) (*ByteCode, error) { return Simple("astore_2", c) }
+func r4E(c *Context) (*ByteCode, error) { return Simple("astore_3", c) }
+func r4F(c *Context) (*ByteCode, error) { return Simple("iastore", c) }
+func r50(c *Context) (*ByteCode, error) { return Simple("lastore", c) }
+func r51(c *Context) (*ByteCode, error) { return Simple("fastore", c) }
+func r52(c *Context) (*ByteCode, error) { return Simple("dastore", c) }
+func r53(c *Context) (*ByteCode, error) { return Simple("aastore", c) }
+func r54(c *Context) (*ByteCode, error) { return Simple("bastore", c) }
+func r55(c *Context) (*ByteCode, error) { return Simple("castore", c) }
+func r56(c *Context) (*ByteCode, error) { return Simple("sastore", c) }
+func r57(c *Context) (*ByteCode, error) { return Simple("pop", c) }
+func r58(c *Context) (*ByteCode, error) { return Simple("pop2", c) }
+func r59(c *Context) (*ByteCode, error) { return Simple("dup", c) }
+func r5A(c *Context) (*ByteCode, error) { return Simple("dup_x1", c) }
+func r5B(c *Context) (*ByteCode, error) { return Simple("dup_x2", c) }
+func r5C(c *Context) (*ByteCode, error) { return Simple("dup2", c) }
+func r5D(c *Context) (*ByteCode, error) { return Simple("dup2_x1", c) }
+func r5E(c *Context) (*ByteCode, error) { return Simple("dup2_x2", c) }
+func r5F(c *Context) (*ByteCode, error) { return Simple("swap", c) }
+func r60(c *Context) (*ByteCode, error) { return Simple("iadd", c) }
+func r61(c *Context) (*ByteCode, error) { return Simple("ladd", c) }
+func r62(c *Context) (*ByteCode, error) { return Simple("fadd", c) }
+func r63(c *Context) (*ByteCode, error) { return Simple("dadd", c) }
+func r64(c *Context) (*ByteCode, error) { return Simple("isub", c) }
+func r65(c *Context) (*ByteCode, error) { return Simple("lsub", c) }
+func r66(c *Context) (*ByteCode, error) { return Simple("fsub", c) }
+func r67(c *Context) (*ByteCode, error) { return Simple("dsub", c) }
+func r68(c *Context) (*ByteCode, error) { return Simple("imul", c) }
+func r69(c *Context) (*ByteCode, error) { return Simple("lmul", c) }
+func r6A(c *Context) (*ByteCode, error) { return Simple("fmul", c) }
+func r6B(c *Context) (*ByteCode, error) { return Simple("dmul", c) }
+func r6C(c *Context) (*ByteCode, error) { return Simple("idiv", c) }
+func r6D(c *Context) (*ByteCode, error) { return Simple("ldiv", c) }
+func r6E(c *Context) (*ByteCode, error) { return Simple("fdiv", c) }
+func r6F(c *Context) (*ByteCode, error) { return Simple("ddiv", c) }
+func r70(c *Context) (*ByteCode, error) { return Simple("irem", c) }
+func r71(c *Context) (*ByteCode, error) { return Simple("lrem", c) }
+func r72(c *Context) (*ByteCode, error) { return Simple("frem", c) }
+func r73(c *Context) (*ByteCode, error) { return Simple("drem", c) }
+func r74(c *Context) (*ByteCode, error) { return Simple("ineg", c) }
+func r75(c *Context) (*ByteCode, error) { return Simple("lneg", c) }
+func r76(c *Context) (*ByteCode, error) { return Simple("fneg", c) }
+func r77(c *Context) (*ByteCode, error) { return Simple("dneg", c) }
+func r78(c *Context) (*ByteCode, error) { return Simple("ishl", c) }
+func r79(c *Context) (*ByteCode, error) { return Simple("lshl", c) }
+func r7A(c *Context) (*ByteCode, error) { return Simple("ishr", c) }
+func r7B(c *Context) (*ByteCode, error) { return Simple("lshr", c) }
+func r7C(c *Context) (*ByteCode, error) { return Simple("iushr", c) }
+func r7D(c *Context) (*ByteCode, error) { return Simple("lushr", c) }
+func r7E(c *Context) (*ByteCode, error) { return Simple("iand", c) }
+func r7F(c *Context) (*ByteCode, error) { return Simple("land", c) }
+func r80(c *Context) (*ByteCode, error) { return Simple("ior", c) }
+func r81(c *Context) (*ByteCode, error) { return Simple("lor", c) }
+func r82(c *Context) (*ByteCode, error) { return Simple("ixor", c) }
+func r83(c *Context) (*ByteCode, error) { return Simple("lxor", c) }
+func r84(c *Context) (*ByteCode, error) { return WithArgs("iinc", c, false, 2) }
+func r85(c *Context) (*ByteCode, error) { return Simple("i2l", c) }
+func r86(c *Context) (*ByteCode, error) { return Simple("i2f", c) }
+func r87(c *Context) (*ByteCode, error) { return Simple("i2d", c) }
+func r88(c *Context) (*ByteCode, error) { return Simple("l2i", c) }
+func r89(c *Context) (*ByteCode, error) { return Simple("l2f", c) }
+func r8A(c *Context) (*ByteCode, error) { return Simple("l2d", c) }
+func r8B(c *Context) (*ByteCode, error) { return Simple("f2i", c) }
+func r8C(c *Context) (*ByteCode, error) { return Simple("f2l", c) }
+func r8D(c *Context) (*ByteCode, error) { return Simple("f2d", c) }
+func r8E(c *Context) (*ByteCode, error) { return Simple("d2i", c) }
+func r8F(c *Context) (*ByteCode, error) { return Simple("d2l", c) }
+func r90(c *Context) (*ByteCode, error) { return Simple("d2f", c) }
+func r91(c *Context) (*ByteCode, error) { return Simple("i2b", c) }
+func r92(c *Context) (*ByteCode, error) { return Simple("i2c", c) }
+func r93(c *Context) (*ByteCode, error) { return Simple("i2s", c) }
+func r94(c *Context) (*ByteCode, error) { return Simple("lcmp", c) }
+func r95(c *Context) (*ByteCode, error) { return Simple("fcmpl", c) }
+func r96(c *Context) (*ByteCode, error) { return Simple("fcmpg", c) }
+func r97(c *Context) (*ByteCode, error) { return Simple("dcmpl", c) }
+func r98(c *Context) (*ByteCode, error) { return Simple("dcmpg", c) }
+func r99(c *Context) (*ByteCode, error) { return WithArgs("ifeq", c, false, 2) }
+func r9A(c *Context) (*ByteCode, error) { return WithArgs("ifne", c, false, 2) }
+func r9B(c *Context) (*ByteCode, error) { return WithArgs("iflt", c, false, 2) }
+func r9C(c *Context) (*ByteCode, error) { return WithArgs("ifge", c, false, 2) }
+func r9D(c *Context) (*ByteCode, error) { return WithArgs("ifgt", c, false, 2) }
+func r9E(c *Context) (*ByteCode, error) { return WithArgs("ifle", c, false, 2) }
+func r9F(c *Context) (*ByteCode, error) { return WithArgs("if_icmpeq", c, false, 2) }
+func rA0(c *Context) (*ByteCode, error) { return WithArgs("if_icmpne", c, false, 2) }
+func rA1(c *Context) (*ByteCode, error) { return WithArgs("if_icmplt", c, false, 2) }
+func rA2(c *Context) (*ByteCode, error) { return WithArgs("if_icmpge", c, false, 2) }
+func rA3(c *Context) (*ByteCode, error) { return WithArgs("if_icmpgt", c, false, 2) }
+func rA4(c *Context) (*ByteCode, error) { return WithArgs("if_icmple", c, false, 2) }
+func rA5(c *Context) (*ByteCode, error) { return WithArgs("if_acmpeq", c, false, 2) }
+func rA6(c *Context) (*ByteCode, error) { return WithArgs("if_acmpne", c, false, 2) }
+func rA7(c *Context) (*ByteCode, error) { return WithArgs("goto", c, false, 2) }
+func rA8(c *Context) (*ByteCode, error) { return WithArgs("jsr", c, false, 2) }
+func rA9(c *Context) (*ByteCode, error) { return WithArgs("ret", c, false, 1) }
+func rAA(c *Context) (*ByteCode, error) { return TableSwitch("tableswitch", c.p, c) }
+func rAB(c *Context) (*ByteCode, error) { return LookupSwitch("lookupswitch", c.p, c) }
+func rAC(c *Context) (*ByteCode, error) { return Simple("ireturn", c) }
+func rAD(c *Context) (*ByteCode, error) { return Simple("lreturn", c) }
+func rAE(c *Context) (*ByteCode, error) { return Simple("freturn", c) }
+func rAF(c *Context) (*ByteCode, error) { return Simple("dreturn", c) }
+func rB0(c *Context) (*ByteCode, error) { return Simple("areturn", c) }
+func rB1(c *Context) (*ByteCode, error) { return Simple("return", c) }
+func rB2(c *Context) (*ByteCode, error) { return WithArgs("getstatic", c, true, 2) }
+func rB3(c *Context) (*ByteCode, error) { return WithArgs("putstatic", c, true, 2) }
+func rB4(c *Context) (*ByteCode, error) { return WithArgs("getfield", c, true, 2) }
+func rB5(c *Context) (*ByteCode, error) { return WithArgs("putfield", c, true, 2) }
+func rB6(c *Context) (*ByteCode, error) { return WithArgs("invokevirtual", c, true, 2) }
+func rB7(c *Context) (*ByteCode, error) { return WithArgs("invokespecial", c, true, 2) }
+func rB8(c *Context) (*ByteCode, error) { return WithArgs("invokestatic", c, true, 2) }
+func rB9(c *Context) (*ByteCode, error) { return WithArgs("invokeinterface", c, true, 4) }
+func rBA(c *Context) (*ByteCode, error) { return WithArgs("invokedynamic", c, true, 4) }
+func rBB(c *Context) (*ByteCode, error) { return WithArgs("new", c, true, 2) }
+func rBC(c *Context) (*ByteCode, error) { return WithArgs("newarray", c, false, 1) }
+func rBD(c *Context) (*ByteCode, error) { return WithArgs("anewarray", c, true, 2) }
+func rBE(c *Context) (*ByteCode, error) { return Simple("arraylength", c) }
+func rBF(c *Context) (*ByteCode, error) { return Simple("athrow", c) }
+func rC0(c *Context) (*ByteCode, error) { return WithArgs("checkcast", c, true, 2) }
+func rC1(c *Context) (*ByteCode, error) { return WithArgs("instanceof", c, true, 2) }
+func rC2(c *Context) (*ByteCode, error) { return Simple("monitorenter", c) }
+func rC3(c *Context) (*ByteCode, error) { return Simple("monitorexit", c) }
+func rC4(c *Context) (*ByteCode, error) { return Wide("wide", c.p, c) }
+func rC5(c *Context) (*ByteCode, error) { return WithArgs("multianewarray", c, true, 3) }
+func rC6(c *Context) (*ByteCode, error) { return WithArgs("ifnull", c, false, 2) }
+func rC7(c *Context) (*ByteCode, error) { return WithArgs("ifnonnull", c, false, 2) }
+func rC8(c *Context) (*ByteCode, error) { return WithArgs("goto_w", c, false, 4) }
+func rC9(c *Context) (*ByteCode, error) { return WithArgs("jsr_w", c, false, 4) }
+func rCA(c *Context) (*ByteCode, error) { return Simple("breakpoint", c) }
+func rFE(c *Context) (*ByteCode, error) { return Simple("impdep1", c) }
+func rFF(c *Context) (*ByteCode, error) { return Simple("impdep2", c) }

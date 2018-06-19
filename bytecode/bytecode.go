@@ -15,7 +15,7 @@ type ByteCode struct {
 	IndexByte bool
 }
 
-var cache map[byte]ByteCodeReader
+var cache map[byte]Reader
 
 func Read(r io.Reader) (codes []*ByteCode, err error) {
 
@@ -30,6 +30,8 @@ func Read(r io.Reader) (codes []*ByteCode, err error) {
 
 	var p uint32
 	var oc = []byte{0}
+	var rc = &Context{r, &p}
+
 	for p = 0; p < codeLength; p++ {
 
 		var n int
@@ -43,7 +45,7 @@ func Read(r io.Reader) (codes []*ByteCode, err error) {
 		reader := cache[oc[0]]
 
 		var code *ByteCode
-		if code, err = reader(&p, r); err != nil {
+		if code, err = reader(rc); err != nil {
 			return nil, err
 		}
 		codes = append(codes, code)
@@ -51,34 +53,27 @@ func Read(r io.Reader) (codes []*ByteCode, err error) {
 	return
 }
 
-type ByteCodeReader func(p *uint32, r io.Reader) (*ByteCode, error)
-
-func (bc *ByteCode) ReadFull(p *uint32, r io.Reader, count int) {
-	bc.Arguments = make([]byte, count)
-	cnt, err := io.ReadFull(r, bc.Arguments)
-	if count != cnt {
-		panic(fmt.Errorf("expected %d bytes but only read %d", count, cnt))
-	}
-	if err != nil {
-		panic(err)
-	}
-	*p = *p + uint32(count)
+type Context struct {
+	io.Reader
+	p *uint32
 }
 
-func Simple(op string, p *uint32) (*ByteCode, error) {
-	return &ByteCode{Operand: op, Offset: *p}, nil
+type Reader func(rc *Context) (*ByteCode, error)
+
+func Simple(op string, c *Context) (*ByteCode, error) {
+	return &ByteCode{Operand: op, Offset: *c.p}, nil
 }
 
-func WithArgs(op string, p *uint32, r io.Reader, index bool, count int) (*ByteCode, error) {
-	bc := &ByteCode{Operand: op, Offset: *p, IndexByte: index, Arguments: make([]byte, count)}
-	cnt, err := io.ReadFull(r, bc.Arguments)
+func WithArgs(op string, c *Context, index bool, count int) (*ByteCode, error) {
+	bc := &ByteCode{Operand: op, Offset: *c.p, IndexByte: index, Arguments: make([]byte, count)}
+	cnt, err := io.ReadFull(c, bc.Arguments)
 	if err != nil {
 		return nil, err
 	}
 	if count != cnt {
 		return nil, fmt.Errorf("expected %d bytes but only read %d", count, cnt)
 	}
-	*p = *p + uint32(count)
+	*c.p = *c.p + uint32(count)
 	return bc, nil
 }
 
