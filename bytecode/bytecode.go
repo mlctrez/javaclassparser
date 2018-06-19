@@ -2,10 +2,9 @@ package bytecode
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
-
-	"v/github.com/kataras/iris@v0.0.0-20180521044043-e1e309c0fe31/core/errors"
 )
 
 type ByteCode struct {
