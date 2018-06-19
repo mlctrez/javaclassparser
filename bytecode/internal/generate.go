@@ -62,7 +62,7 @@ func main() {
 	fmt.Fprintln(out, "\tm := make(map[byte]ByteCodeReader)")
 	for _, parts := range byteCodeLines {
 		byteCodeHex := strings.ToUpper(parts[1])
-		fmt.Fprintf(out, "\tm[0x%s] = readOpCode_%s\n", byteCodeHex, byteCodeHex)
+		fmt.Fprintf(out, "\tm[0x%s] = r%s\n", byteCodeHex, byteCodeHex)
 	}
 	fmt.Fprintln(out, "\treturn m")
 	fmt.Fprintln(out, "}")
@@ -74,18 +74,18 @@ func main() {
 		upperHex := strings.ToUpper(parts[1])
 
 		if args == 0 {
-			fmt.Fprintf(out, "func readOpCode_%s(p *uint32, _ io.Reader) (*ByteCode, error) { ", upperHex)
+			fmt.Fprintf(out, "func r%s(p *uint32, _ io.Reader) (*ByteCode, error) { ", upperHex)
 			fmt.Fprintf(out, "return Simple(%q, p) }\n", parts[0])
 			continue
 		}
 
 		if args > 0 {
-			fmt.Fprintf(out, "func readOpCode_%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
+			fmt.Fprintf(out, "func r%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
 			fmt.Fprintf(out, "return WithArgs(%q, p, r, %t, %d) }\n", parts[0], index, args)
 			continue
 		}
 
-		fmt.Fprintf(out, "func readOpCode_%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
+		fmt.Fprintf(out, "func r%s(p *uint32, r io.Reader) (*ByteCode, error) { ", upperHex)
 
 		switch parts[0]{
 		case "tableswitch":
