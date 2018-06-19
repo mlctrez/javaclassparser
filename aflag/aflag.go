@@ -1,27 +1,8 @@
-package javaclassparser
+package aflag
 
 import (
-	"errors"
 	"strings"
 )
-
-// http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4
-
-// http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4-140
-const CONSTANT_Class = 7
-const CONSTANT_Fieldref = 9
-const CONSTANT_Methodref = 10
-const CONSTANT_InterfaceMethodref = 11
-const CONSTANT_String = 8
-const CONSTANT_Integer = 3
-const CONSTANT_Float = 4
-const CONSTANT_Long = 5
-const CONSTANT_Double = 6
-const CONSTANT_NameAndType = 12
-const CONSTANT_Utf8 = 1
-const CONSTANT_MethodHandle = 15
-const CONSTANT_MethodType = 16
-const CONSTANT_InvokeDynamic = 18
 
 // http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.5-200-A.1
 // http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.6-200-A.1
@@ -48,16 +29,6 @@ const ACC_MANDATED AccessFlag = 0x8000
 const ACC_SUPER AccessFlag = 0x0020
 
 type AccessFlag uint16
-
-func (f *AccessFlag) ValidateClass() error {
-	if (*f & ACC_INTERFACE) != 0 {
-		*f |= ACC_ABSTRACT
-	}
-	if ((*f & ACC_ABSTRACT) != 0) && ((*f & ACC_FINAL) != 0) {
-		return errors.New("class can't be both final and abstract")
-	}
-	return nil
-}
 
 func (f AccessFlag) String() string {
 	var mods []string

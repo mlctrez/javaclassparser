@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/mlctrez/javaclassparser/cpool"
 )
 
 type ByteCode struct {
@@ -83,14 +85,12 @@ func (bc ByteCode) String() string {
 	return bc.Operand
 }
 
-type ConstantsLookup func(index uint16) interface{}
-
-func (bc *ByteCode) StringWithIndex(constants ConstantsLookup) string {
+func (bc *ByteCode) StringWithIndex(pool cpool.ConstantPool) string {
 
 	if len(bc.Arguments) > 0 {
 		if bc.IndexByte {
 			index := uint16(bc.Arguments[0])*255 + uint16(bc.Arguments[1])
-			return fmt.Sprintf("%s %v", bc.Operand, constants(index))
+			return fmt.Sprintf("%s %v", bc.Operand, pool.Lookup(index))
 		}
 	}
 	return bc.String()
