@@ -3,15 +3,16 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"flag"
 	"fmt"
-	"github.com/mlctrez/javaclassparser"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/mlctrez/javaclassparser"
 )
 
 func failErr(err error) {
@@ -20,35 +21,72 @@ func failErr(err error) {
 	}
 }
 
+type ParserConfig struct {
+	archive         string
+	class           string
+	printArchives   bool
+	printClassNames bool
+	logElapsed      bool
+	debugClass      string
+}
+
+func NewConfigFromArgs() *ParserConfig {
+	config := &ParserConfig{}
+
+	flag.StringVar(&config.archive, "archive", "", "the war, jar or ear archive to scan")
+	flag.StringVar(&config.class, "class", "", "only display information about this class")
+	flag.BoolVar(&config.printArchives, "pa", false, "print each archive name as it is read")
+	flag.BoolVar(&config.printClassNames, "pc", false, "print each class name as it is read")
+	flag.BoolVar(&config.logElapsed, "le", true, "log total elapsed time")
+	flag.StringVar(&config.debugClass, "dbc", "", "dump detailed byte code information for this class")
+
+	flag.Parse()
+
+	if config.archive == "" {
+		fmt.Println("archive is required")
+		os.Exit(1)
+	}
+	return config
+}
+
 func main() {
+
+	// red is bad
 	log.SetOutput(os.Stdout)
 
-	start := time.Now()
-	if false {
-		archive := "/some/path/to/somejar.ear"
-		// archives within archives are supported
-		rc, err := zip.OpenReader(archive)
-		failErr(err)
-		read(archive, rc)
+	config := NewConfigFromArgs()
+
+	var start time.Time
+	if config.logElapsed {
+		start = time.Now()
 	}
+	defer func() {
+		if config.logElapsed {
+			log.Println(time.Since(start).Seconds())
+		}
+	}()
 
-	if true {
-
-		oc, err := exec.Command("javac", "-d", "java", "java/example/Sample.java").CombinedOutput()
-		fmt.Println(string(oc))
-		failErr(err)
-
+	if strings.HasSuffix(config.archive, ".class") {
 		jcp := &javaclassparser.ClassParser{}
-		r, err := os.Open("java/example/Sample.class")
-		failErr(err)
-		jcp.Parse(r)
+		b, err := ioutil.ReadFile(config.archive)
+		if err != nil {
+			panic(err)
+		}
+		jcp.Parse(bytes.NewReader(b))
 		jcp.DebugOut()
+		return
 	}
-	log.Println(time.Since(start).Seconds())
+
+	rc, err := zip.OpenReader(config.archive)
+	failErr(err)
+	read(config, config.archive, rc)
 
 }
 
-func read(path string, rc *zip.ReadCloser) {
+func read(config *ParserConfig, path string, rc *zip.ReadCloser) {
+	if config.printArchives {
+		fmt.Println("reading", path)
+	}
 	for _, f := range rc.File {
 		if f.FileInfo().IsDir() {
 			continue
@@ -70,7 +108,7 @@ func read(path string, rc *zip.ReadCloser) {
 			if err != nil {
 				panic(err)
 			}
-			read(path+"!"+f.Name, jarReader)
+			read(config, path+"!"+f.Name, jarReader)
 			jarReader.Close()
 			os.Remove(tf.Name())
 		}
@@ -87,9 +125,14 @@ func read(path string, rc *zip.ReadCloser) {
 				fmt.Println(bc, f.UncompressedSize64, f.Name, err)
 				log.Fatal("unable to read entire file")
 			}
-
+			if config.printClassNames {
+				fmt.Println("reading", f.Name)
+			}
 			jcp := &javaclassparser.ClassParser{}
 			jcp.Parse(bytes.NewReader(bb.Bytes()))
+			if "all" == config.debugClass || config.debugClass == f.Name {
+				jcp.DebugOut()
+			}
 
 		}
 		rp.Close()

@@ -6,18 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/mlctrez/javaclassparser/bytecode"
 )
 
 // http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
 
 func failErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -25,9 +26,13 @@ func read(r io.Reader, data interface{}) {
 	failErr(binary.Read(r, binary.BigEndian, data))
 }
 
+type ConstantPool interface {
+	Lookup(index uint16) interface{}
+}
+
 type ConstBase struct {
-	Jcp *ClassParser
-	Tag uint8
+	Pool ConstantPool
+	Tag  uint8
 }
 
 type RefBase struct {
@@ -47,13 +52,13 @@ type CONSTANT_Class_info struct {
 }
 
 func (c *CONSTANT_Class_info) String() string {
-	return fmt.Sprintf("%s", c.Jcp.Lookup(c.NameIndex))
+	return fmt.Sprintf("%s", c.Pool.Lookup(c.NameIndex))
 }
 
 func (jcp *ClassParser) ReadCONSTANT_Class_info(r io.Reader) *CONSTANT_Class_info {
 	c := &CONSTANT_Class_info{}
 	c.Tag = CONSTANT_Class
-	c.Jcp = jcp
+	c.Pool = jcp
 	read(r, &c.NameIndex)
 	return c
 }
@@ -61,12 +66,12 @@ func (jcp *ClassParser) ReadCONSTANT_Class_info(r io.Reader) *CONSTANT_Class_inf
 type CONSTANT_Fieldref_info struct{ RefBase }
 
 func (c *CONSTANT_Fieldref_info) String() string {
-	return fmt.Sprintf("%s %s", c.Jcp.Lookup(c.ClassIndex), c.Jcp.Lookup(c.NameAndTypeIndex))
+	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.ClassIndex), c.Pool.Lookup(c.NameAndTypeIndex))
 }
 
 func (jcp *ClassParser) ReadCONSTANT_Fieldref_info(r io.Reader) *CONSTANT_Fieldref_info {
 	fr := &CONSTANT_Fieldref_info{}
-	fr.Jcp = jcp
+	fr.Pool = jcp
 	fr.Tag = CONSTANT_Fieldref
 	fr.ReadRefBaseIndexes(r)
 	return fr
@@ -76,7 +81,7 @@ type CONSTANT_Methodref_info struct{ RefBase }
 
 func (jcp *ClassParser) ReadCONSTANT_Methodref_info(r io.Reader) *CONSTANT_Fieldref_info {
 	mr := &CONSTANT_Fieldref_info{}
-	mr.Jcp = jcp
+	mr.Pool = jcp
 	mr.Tag = CONSTANT_Methodref
 	mr.ReadRefBaseIndexes(r)
 	return mr
@@ -86,7 +91,7 @@ type CONSTANT_InterfaceMethodref_info struct{ RefBase }
 
 func (jcp *ClassParser) ReadCONSTANT_InterfaceMethodref_info(r io.Reader) *CONSTANT_Fieldref_info {
 	imr := &CONSTANT_Fieldref_info{}
-	imr.Jcp = jcp
+	imr.Pool = jcp
 	imr.Tag = CONSTANT_InterfaceMethodref
 	imr.ReadRefBaseIndexes(r)
 	return imr
@@ -98,12 +103,12 @@ type CONSTANT_String_info struct {
 }
 
 func (c *CONSTANT_String_info) String() string {
-	return fmt.Sprintf("%s", c.Jcp.Lookup(c.StringIndex))
+	return fmt.Sprintf("%s", c.Pool.Lookup(c.StringIndex))
 }
 
 func (jcp *ClassParser) ReadCONSTANT_String_info(r io.Reader) *CONSTANT_String_info {
 	cs := &CONSTANT_String_info{}
-	cs.Jcp = jcp
+	cs.Pool = jcp
 	cs.Tag = CONSTANT_String
 	read(r, &cs.StringIndex)
 	return cs
@@ -114,9 +119,13 @@ type CONSTANT_Integer_info struct {
 	Value int32
 }
 
+func (c *CONSTANT_Integer_info) String() string {
+	return fmt.Sprintf("%d", c.Value)
+}
+
 func (jcp *ClassParser) ReadCONSTANT_Integer_info(r io.Reader) *CONSTANT_Integer_info {
 	ci := &CONSTANT_Integer_info{}
-	ci.Jcp = jcp
+	ci.Pool = jcp
 	ci.Tag = CONSTANT_Integer
 	read(r, &ci.Value)
 	return ci
@@ -133,7 +142,7 @@ func (c *CONSTANT_Float_info) String() string {
 
 func (jcp *ClassParser) ReadCONSTANT_Float_info(r io.Reader) *CONSTANT_Float_info {
 	cf := &CONSTANT_Float_info{}
-	cf.Jcp = jcp
+	cf.Pool = jcp
 	cf.Tag = CONSTANT_Float
 	var floatBits uint32
 	read(r, &floatBits)
@@ -152,7 +161,7 @@ func (c *CONSTANT_Long_info) String() string {
 
 func (jcp *ClassParser) ReadCONSTANT_Long_info(r io.Reader) *CONSTANT_Long_info {
 	cl := &CONSTANT_Long_info{}
-	cl.Jcp = jcp
+	cl.Pool = jcp
 	cl.Tag = CONSTANT_Long
 	read(r, &cl.Value)
 	return cl
@@ -169,7 +178,7 @@ func (c *CONSTANT_Double_info) String() string {
 
 func (jcp *ClassParser) ReadCONSTANT_Double_info(r io.Reader) *CONSTANT_Double_info {
 	cd := &CONSTANT_Double_info{}
-	cd.Jcp = jcp
+	cd.Pool = jcp
 	cd.Tag = CONSTANT_Double
 	read(r, &cd.Value)
 	return cd
@@ -182,12 +191,12 @@ type CONSTANT_NameAndType_info struct {
 }
 
 func (c *CONSTANT_NameAndType_info) String() string {
-	return fmt.Sprintf("%s %s", c.Jcp.Lookup(c.NameIndex), c.Jcp.Lookup(c.DescriptorIndex))
+	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
 func (jcp *ClassParser) ReadCONSTANT_NameAndType_info(r io.Reader) *CONSTANT_NameAndType_info {
 	nat := &CONSTANT_NameAndType_info{}
-	nat.Jcp = jcp
+	nat.Pool = jcp
 	nat.Tag = CONSTANT_NameAndType
 	read(r, &nat.NameIndex)
 	read(r, &nat.DescriptorIndex)
@@ -200,23 +209,24 @@ type CONSTANT_Utf8_info struct {
 }
 
 func (c *CONSTANT_Utf8_info) String() string {
-	return fmt.Sprintf("%q", c.Value)
+	// TODO: this was %q but changed to %s
+	return fmt.Sprintf("%s", c.Value)
 }
 
 func (jcp *ClassParser) ReadCONSTANT_Utf8_info(r io.Reader) *CONSTANT_Utf8_info {
 	u := &CONSTANT_Utf8_info{}
-	u.Jcp = jcp
+	u.Pool = jcp
 	u.Tag = CONSTANT_Utf8
-	var len uint16
-	read(r, &len)
-	buff := make([]uint8, len)
+	var length uint16
+	read(r, &length)
+	buff := make([]uint8, length)
 	read, err := r.Read(buff)
 	if err != nil {
 		fmt.Println(err)
 	}
 	failErr(err)
-	if len != uint16(read) {
-		failErr(fmt.Errorf("incorrect length, expected %d but got %d", len, read))
+	if length != uint16(read) {
+		failErr(fmt.Errorf("incorrect length, expected %d but got %d", length, read))
 	}
 	u.Value = string(buff)
 	return u
@@ -230,7 +240,7 @@ type CONSTANT_MethodHandle_info struct {
 
 func (jcp *ClassParser) ReadCONSTANT_MethodHandle_info(r io.Reader) *CONSTANT_MethodHandle_info {
 	mh := &CONSTANT_MethodHandle_info{}
-	mh.Jcp = jcp
+	mh.Pool = jcp
 	mh.Tag = CONSTANT_MethodHandle
 	read(r, &mh.ReferenceKind)
 	read(r, &mh.ReferenceIndex)
@@ -244,7 +254,7 @@ type CONSTANT_MethodType_info struct {
 
 func (jcp *ClassParser) ReadCONSTANT_MethodType_info(r io.Reader) *CONSTANT_MethodType_info {
 	mt := &CONSTANT_MethodType_info{}
-	mt.Jcp = jcp
+	mt.Pool = jcp
 	mt.Tag = CONSTANT_MethodType
 	read(r, &mt.DescriptorIndex)
 	return mt
@@ -258,7 +268,7 @@ type CONSTANT_InvokeDynamic_info struct {
 
 func (jcp *ClassParser) ReadCONSTANT_InvokeDynamic_info(r io.Reader) *CONSTANT_InvokeDynamic_info {
 	cid := &CONSTANT_InvokeDynamic_info{}
-	cid.Jcp = jcp
+	cid.Pool = jcp
 	cid.Tag = CONSTANT_InvokeDynamic
 	read(r, &cid.BoostrapMethodAttrIndex)
 	read(r, &cid.NameAndTypeIndex)
@@ -338,7 +348,7 @@ func (jcp *ClassParser) readClassInfo(r io.Reader) {
 		jcp.accessFlags |= ACC_ABSTRACT
 	}
 	if ((jcp.accessFlags & ACC_ABSTRACT) != 0) && ((jcp.accessFlags & ACC_FINAL) != 0) {
-		failErr(errors.New("Class can't be both final and abstract"))
+		failErr(errors.New("class can't be both final and abstract"))
 	}
 	return
 }
@@ -356,7 +366,7 @@ func (jcp *ClassParser) readInterfaces(r io.Reader) {
 }
 
 type AttributeBase struct {
-	Jcp *ClassParser
+	Pool ConstantPool
 }
 
 type field_info struct {
@@ -368,7 +378,11 @@ type field_info struct {
 }
 
 func (c *field_info) String() string {
-	return fmt.Sprintf("%s %s %s %s", c.AccessFlags, c.Jcp.Lookup(c.NameIndex), c.Jcp.Lookup(c.DescriptorIndex), c.Attributes)
+	af := c.AccessFlags
+	name := c.Pool.Lookup(c.NameIndex)
+	descriptor := c.Pool.Lookup(c.DescriptorIndex)
+	attributes := c.Attributes
+	return fmt.Sprintf("%s %s %s %s", af, name, descriptor, attributes)
 }
 
 type SourceFile_attribute struct {
@@ -379,7 +393,7 @@ type SourceFile_attribute struct {
 }
 
 func (s *SourceFile_attribute) String() string {
-	return fmt.Sprintf("%s %s", TypeName(s), s.Jcp.Lookup(s.SourceFileIndex))
+	return fmt.Sprintf("%s %s", TypeName(s), s.Pool.Lookup(s.SourceFileIndex))
 }
 
 type ConstantValue_attribute struct {
@@ -388,14 +402,14 @@ type ConstantValue_attribute struct {
 }
 
 func (s *ConstantValue_attribute) String() string {
-	return fmt.Sprintf("%s %v", TypeName(s), s.Jcp.Lookup(s.ConstantValueIndex))
+	return fmt.Sprintf("%s %v", TypeName(s), s.Pool.Lookup(s.ConstantValueIndex))
 }
 
 type Code_attribute struct {
 	AttributeBase
 	MaxStack       uint16
 	MaxLocals      uint16
-	Code           []uint8
+	Code           []*bytecode.ByteCode
 	ExceptionTable []*Code_attribute_exception_table
 	Attributes     []interface{}
 }
@@ -414,7 +428,7 @@ func (c *Code_attribute_exception_table) String() string {
 
 func (jcp *ClassParser) ReadCodeAttributeExceptionTable(r io.Reader) *Code_attribute_exception_table {
 	et := &Code_attribute_exception_table{}
-	et.Jcp = jcp
+	et.Pool = jcp
 	read(r, &et.StartPc)
 	read(r, &et.EndPc)
 	read(r, &et.HandlerPc)
@@ -430,20 +444,21 @@ type Exceptions_attribute struct {
 func (s *Exceptions_attribute) String() string {
 	el := make([]interface{}, len(s.Exceptions))
 	for i, e := range s.Exceptions {
-		el[i] = s.Jcp.Lookup(e)
+		el[i] = s.Pool.Lookup(e)
 	}
 	return fmt.Sprintf("%v %v", TypeName(s), el)
 }
 
 func (jcp *ClassParser) ReadCodeAttribute(r io.Reader) *Code_attribute {
 	c := &Code_attribute{}
-	c.Jcp = jcp
+	c.Pool = jcp
 	read(r, &c.MaxStack)
 	read(r, &c.MaxLocals)
-	var codeLength uint32
-	read(r, &codeLength)
-	c.Code = make([]uint8, codeLength)
-	read(r, &c.Code)
+
+	codes, err := bytecode.Read(r)
+	failErr(err)
+	c.Code = codes
+
 	var exceptionTableLength uint16
 	read(r, &exceptionTableLength)
 	c.ExceptionTable = make([]*Code_attribute_exception_table, exceptionTableLength)
@@ -479,25 +494,26 @@ func (jcp *ClassParser) ReadAttributeInfo(r io.Reader) interface{} {
 	switch attributeName.Value {
 	case "SourceFile":
 		s := &SourceFile_attribute{}
-		s.Jcp = jcp
+		s.Pool = jcp
 		read(lr, &s.SourceFileIndex)
 		return s
 	case "ConstantValue":
 		c := &ConstantValue_attribute{}
-		c.Jcp = jcp
+		c.Pool = jcp
 		read(lr, &c.ConstantValueIndex)
 		return c
 	case "Code":
 		return jcp.ReadCodeAttribute(bytes.NewReader(info))
 	case "Exceptions":
 		ea := &Exceptions_attribute{}
-		ea.Jcp = jcp
+		ea.Pool = jcp
 		var numExceptions uint16
 		read(lr, &numExceptions)
 		ea.Exceptions = make([]uint16, numExceptions)
 		read(lr, &ea.Exceptions)
 		return ea
 	case "EnclosingMethod":
+		// TODO: finish the remainder of these
 	case "InnerClasses":
 	case "BootstrapMethods":
 	case "Signature":
@@ -510,6 +526,7 @@ func (jcp *ClassParser) ReadAttributeInfo(r io.Reader) interface{} {
 	case "RuntimeVisibleParameterAnnotations":
 	case "SourceDebugExtension":
 	case "Bridge":
+	case "MethodParameters":
 
 	default:
 		if !strings.HasPrefix(attributeName.Value, "org.aspectj") {
@@ -521,7 +538,7 @@ func (jcp *ClassParser) ReadAttributeInfo(r io.Reader) interface{} {
 
 func (jcp *ClassParser) ReadFieldInfo(r io.Reader) *field_info {
 	fi := &field_info{}
-	fi.Jcp = jcp
+	fi.Pool = jcp
 	read(r, &fi.AccessFlags)
 	read(r, &fi.NameIndex)
 	read(r, &fi.DescriptorIndex)
@@ -557,13 +574,13 @@ type MethodInfo struct {
 }
 
 func (c *MethodInfo) String() string {
-	return fmt.Sprintf("%s %s %s", c.AccessFlags, c.Jcp.Lookup(c.NameIndex), c.Jcp.Lookup(c.DescriptorIndex))
+	return fmt.Sprintf("%s %s %s", c.AccessFlags, c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
 func (jcp *ClassParser) ReadMethodInfo(r io.Reader) *MethodInfo {
 
 	mi := &MethodInfo{}
-	mi.Jcp = jcp
+	mi.Pool = jcp
 	read(r, &mi.AccessFlags)
 	read(r, &mi.NameIndex)
 	read(r, &mi.DescriptorIndex)
@@ -627,7 +644,7 @@ func (jcp *ClassParser) Lookup(index uint16) interface{} {
 	return jcp.constantPool[index]
 }
 
-func (jcp *ClassParser) Parse(r io.Reader) {
+func (jcp *ClassParser) Parse(r io.Reader) error {
 	failErr(jcp.readID(r))
 	jcp.readMajorMinor(r)
 	jcp.readConstantPool(r)
@@ -636,9 +653,30 @@ func (jcp *ClassParser) Parse(r io.Reader) {
 	jcp.readFields(r)
 	jcp.readMethods(r)
 	jcp.readAttributes(r)
+	return nil
+}
+
+func (jcp *ClassParser) SummarizeOut() {
+	for i, f := range jcp.methods {
+		_ = i
+		for i := 0; i < len(f.Attributes); i++ {
+			attr := f.Attributes[i]
+			if code, ok := attr.(*Code_attribute); ok {
+				methodName := jcp.Lookup(f.NameIndex)
+				className := jcp.Lookup(jcp.classNameIndex)
+				//fmt.Println("class",reflect.TypeOf(className))
+				//fmt.Println("method",reflect.TypeOf(methodName))
+
+				if len(code.Code) > 400 {
+					fmt.Printf("%05d %s.%s\n", len(code.Code), className, methodName)
+				}
+			}
+		}
+	}
 }
 
 func (jcp *ClassParser) DebugOut() {
+
 	for i, pe := range jcp.constantPool {
 		// skip first, long, and double entries that are nil
 		if pe == nil {
@@ -654,17 +692,21 @@ func (jcp *ClassParser) DebugOut() {
 	}
 
 	fmt.Println("*** class fields")
+
 	for i, f := range jcp.fields {
 		fmt.Println(i, f)
 	}
+
 	fmt.Println("*** class methods")
+
 	for i, f := range jcp.methods {
 		fmt.Println(i, f)
 		for i := 0; i < len(f.Attributes); i++ {
 			attr := f.Attributes[i]
 			if code, ok := attr.(*Code_attribute); ok {
 				for j := 0; j < len(code.Code); j++ {
-					fmt.Printf(" Code %04X %02X\n", j, code.Code[j])
+					instruction := code.Code[j]
+					fmt.Printf(" Code %04X %s\n", instruction.Offset, instruction.StringWithIndex(jcp.Lookup))
 				}
 				for j := 0; j < len(code.ExceptionTable); j++ {
 					fmt.Printf(" ExceptionTable %+v\n", code.ExceptionTable[j])
@@ -679,7 +721,9 @@ func (jcp *ClassParser) DebugOut() {
 	}
 
 	fmt.Println("*** class attributes")
+
 	for i, f := range jcp.attributes {
 		fmt.Println(i, f)
 	}
+
 }

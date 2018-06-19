@@ -1,7 +1,6 @@
 package javaclassparser
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -50,7 +49,7 @@ const ACC_SUPER AccessFlag = 0x0020
 type AccessFlag uint16
 
 func (f AccessFlag) String() string {
-	mods := make([]string, 0)
+	var mods []string
 	if (ACC_PUBLIC & f) != 0 {
 		mods = append(mods, "public")
 	}
@@ -108,10 +107,5 @@ func (f AccessFlag) String() string {
 	if (ACC_SUPER & f) != 0 {
 		mods = append(mods, "super")
 	}
-
-	if len(mods) == 0 {
-		return fmt.Sprintf("unknownModifierSet %x", f&0xFFFF)
-	} else {
-		return strings.Join(mods, " ")
-	}
+	return strings.Join(mods, " ")
 }
