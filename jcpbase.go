@@ -112,6 +112,11 @@ func (jcp *ClassParser) Lookup(index uint16) interface{} {
 	return jcp.constantPool.Lookup(index)
 }
 
+func (jcp *ClassParser) Visit(f func(interface{}))  {
+	jcp.constantPool.Visit(f)
+}
+
+
 func (jcp *ClassParser) Parse(r io.Reader) (err error) {
 	failErr(jcp.readID(r))
 	jcp.readMajorMinor(r)
@@ -145,6 +150,14 @@ func (jcp *ClassParser) SummarizeOut() {
 			}
 		}
 	}
+}
+
+func (jcp *ClassParser) SuperClass() string {
+	return fmt.Sprintf("%s", jcp.Lookup(jcp.superClassNameIndex))
+}
+
+func (jcp *ClassParser) ClassName() string {
+	return fmt.Sprintf("%s", jcp.Lookup(jcp.classNameIndex))
 }
 
 func (jcp *ClassParser) DebugOut() {

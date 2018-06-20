@@ -13,6 +13,7 @@ import (
 // ConstantPool breaks cyclic dependencies between packages
 type ConstantPool interface {
 	Lookup(index uint16) interface{}
+	Visit(func(interface{}))
 	DebugOut()
 }
 
@@ -97,6 +98,12 @@ type poolImpl struct {
 
 func (cp *poolImpl) Lookup(index uint16) interface{} {
 	return cp.constantPool[index]
+}
+
+func (cp *poolImpl) Visit(f func(interface{})) {
+	for _, c := range cp.constantPool {
+		f(c)
+	}
 }
 
 func (cp *poolImpl) DebugOut() {

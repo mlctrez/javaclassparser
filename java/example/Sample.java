@@ -4,6 +4,8 @@ public class Sample implements SampleInterface {
 
   private int sampleField;
 
+  public static final String PUB_CONST = "A Public Constant";
+
   public Sample() {}
 
   public String sampleMethod(String arg) {

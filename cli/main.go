@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/mlctrez/javaclassparser"
+	"github.com/mlctrez/javaclassparser/cpool"
 )
 
 func failErr(err error) {
@@ -29,6 +30,7 @@ type ParserConfig struct {
 	class           string
 	printArchives   bool
 	printClassNames bool
+	printMethodRef  bool
 	logElapsed      bool
 	debugClass      string
 }
@@ -40,6 +42,7 @@ func NewConfigFromArgs() *ParserConfig {
 	flag.StringVar(&config.class, "class", "", "only display information about this class")
 	flag.BoolVar(&config.printArchives, "pa", false, "print each archive name as it is read")
 	flag.BoolVar(&config.printClassNames, "pc", false, "print each class name as it is read")
+	flag.BoolVar(&config.printMethodRef, "pmr", false, "print method ref information")
 	flag.BoolVar(&config.logElapsed, "le", true, "log total elapsed time")
 	flag.StringVar(&config.debugClass, "dbc", "", "dump detailed byte code information for this class")
 
@@ -90,9 +93,43 @@ func main() {
 		}
 		return parsers[i].Class < parsers[j].Class
 	})
+
+	prefixes := []string{"com/"}
 	for _, r := range parsers {
 		if "all" == config.debugClass || config.debugClass == r.Class {
 			r.DebugOut()
+		}
+		if config.printMethodRef {
+
+			cn := r.ClassName()
+			wanted := false
+			for _, p := range prefixes {
+				if strings.HasPrefix(cn,p) {
+					wanted = true
+				}
+			}
+			if !wanted {
+				continue
+			}
+
+			r.Visit(func(i interface{}) {
+				var ref string
+				if mr, ok := i.(*cpool.ConstantMethodrefInfo); ok {
+					ref = mr.String()
+				}
+				if mr, ok := i.(*cpool.ConstantInterfaceMethodrefInfo); ok {
+					ref = mr.String()
+				}
+				if ref == "" || strings.HasPrefix(ref, "java/") || strings.HasPrefix(ref, "org/") || strings.HasPrefix(ref, "javax/") {
+					return
+				}
+				if strings.HasPrefix(ref, cn) || strings.HasPrefix(ref, "[L"+cn+";") {
+					return
+				}
+
+				fmt.Println(cn, "->", ref)
+			})
+
 		}
 	}
 
@@ -147,6 +184,7 @@ func read(config *ParserConfig, path string, rc *zip.ReadCloser) []*javaclasspar
 			result = append(result, read(config, path+"!"+f.Name, jarReader)...)
 			jarReader.Close()
 			os.Remove(tf.Name())
+
 		}
 
 		if strings.HasSuffix(f.Name, ".class") {
