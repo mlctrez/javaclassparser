@@ -3,6 +3,8 @@ package cpool
 import (
 	"fmt"
 	"io"
+
+	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
 type RefBase struct {
@@ -12,39 +14,51 @@ type RefBase struct {
 }
 
 func (rb *RefBase) ReadRefBaseIndexes(r io.Reader) {
-	failErr(readUint16(r,&rb.ClassIndex))
-	failErr(readUint16(r,&rb.NameAndTypeIndex))
+	failErr(ioutil.ReadUint16(r, &rb.ClassIndex))
+	failErr(ioutil.ReadUint16(r, &rb.NameAndTypeIndex))
 }
 
+type ConstantFieldrefInfo struct{ RefBase }
 
-type CONSTANT_Fieldref_info struct{ RefBase }
-
-func (c *CONSTANT_Fieldref_info) String() string {
+func (c *ConstantFieldrefInfo) String() string {
 	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.ClassIndex), c.Pool.Lookup(c.NameAndTypeIndex))
 }
 
-func ReadCONSTANT_Fieldref_info(r io.Reader) *CONSTANT_Fieldref_info {
-	fr := &CONSTANT_Fieldref_info{}
+func ReadConstantFieldrefInfo(r PoolReader) *ConstantFieldrefInfo {
+	fr := &ConstantFieldrefInfo{}
+	fr.Pool = r.ConstantPool
 	fr.Tag = CONSTANT_Fieldref
+	fr.Type = "CONSTANT_Fieldref_info"
 	fr.ReadRefBaseIndexes(r)
 	return fr
 }
 
-type CONSTANT_Methodref_info struct{ RefBase }
+type ConstantMethodrefInfo struct{ RefBase }
 
-func ReadCONSTANT_Methodref_info(r io.Reader) *CONSTANT_Methodref_info {
-	mr := &CONSTANT_Methodref_info{}
+func (mr *ConstantMethodrefInfo) String() string {
+	return fmt.Sprintf("%s %s", mr.Pool.Lookup(mr.ClassIndex), mr.Pool.Lookup(mr.NameAndTypeIndex))
+}
+
+func ReadConstantMethodrefInfo(r PoolReader) *ConstantMethodrefInfo {
+	mr := &ConstantMethodrefInfo{}
+	mr.Pool = r.ConstantPool
 	mr.Tag = CONSTANT_Methodref
+	mr.Type = "CONSTANT_Methodref_info"
 	mr.ReadRefBaseIndexes(r)
 	return mr
 }
 
-type CONSTANT_InterfaceMethodref_info struct{ RefBase }
+type ConstantInterfaceMethodrefInfo struct{ RefBase }
 
-func ReadCONSTANT_InterfaceMethodref_info(r io.Reader) *CONSTANT_InterfaceMethodref_info {
-	imr := &CONSTANT_InterfaceMethodref_info{}
+func (imr *ConstantInterfaceMethodrefInfo) String() string {
+	return fmt.Sprintf("%s %s", imr.Pool.Lookup(imr.ClassIndex), imr.Pool.Lookup(imr.NameAndTypeIndex))
+}
+
+func ReadConstantInterfaceMethodrefInfo(r PoolReader) *ConstantInterfaceMethodrefInfo {
+	imr := &ConstantInterfaceMethodrefInfo{}
+	imr.Pool = r.ConstantPool
 	imr.Tag = CONSTANT_InterfaceMethodref
+	imr.Type = "CONSTANT_InterfaceMethodref_info"
 	imr.ReadRefBaseIndexes(r)
 	return imr
 }
-

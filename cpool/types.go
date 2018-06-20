@@ -1,127 +1,144 @@
 package cpool
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
+
+	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
-type CONSTANT_String_info struct {
+type ConstantStringInfo struct {
 	ConstBase
 	StringIndex uint16
 }
 
-func (c *CONSTANT_String_info) String() string {
+func (c *ConstantStringInfo) String() string {
 	return fmt.Sprintf("%s", c.Pool.Lookup(c.StringIndex))
 }
 
-func ReadCONSTANT_String_info(r io.Reader) *CONSTANT_String_info {
-	cs := &CONSTANT_String_info{}
+func ReadConstantStringInfo(r PoolReader) *ConstantStringInfo {
+	cs := &ConstantStringInfo{}
+	cs.Pool = r.ConstantPool
 	cs.Tag = CONSTANT_String
-	failErr(readUint16(r, &cs.StringIndex))
+	cs.Type = "CONSTANT_String_info"
+	failErr(ioutil.ReadUint16(r, &cs.StringIndex))
 	return cs
 }
 
-type CONSTANT_Integer_info struct {
+type ConstantIntegerInfo struct {
 	ConstBase
 	Value int32
 }
 
-func (c *CONSTANT_Integer_info) String() string {
+func (c *ConstantIntegerInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadCONSTANT_Integer_info(r io.Reader) *CONSTANT_Integer_info {
-	ci := &CONSTANT_Integer_info{}
+func ReadConstantIntegerInfo(r PoolReader) *ConstantIntegerInfo {
+	ci := &ConstantIntegerInfo{}
+	ci.Pool = r.ConstantPool
 	ci.Tag = CONSTANT_Integer
-	failErr(readInt32(r, &ci.Value))
+	ci.Type = "CONSTANT_Integer_info"
+	failErr(ioutil.ReadInt32(r, &ci.Value))
 	return ci
 }
 
-type CONSTANT_Float_info struct {
+type ConstantFloatInfo struct {
 	ConstBase
 	Value float32
 }
 
-func (c *CONSTANT_Float_info) String() string {
+func (c *ConstantFloatInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadCONSTANT_Float_info(r io.Reader) *CONSTANT_Float_info {
-	cf := &CONSTANT_Float_info{}
+func ReadConstantFloatInfo(r PoolReader) *ConstantFloatInfo {
+	cf := &ConstantFloatInfo{}
+	cf.Pool = r.ConstantPool
 	cf.Tag = CONSTANT_Float
+	cf.Type = "CONSTANT_Float_info"
 	var floatBits uint32
-	failErr(readUint32(r, &floatBits))
+	failErr(ioutil.ReadUint32(r, &floatBits))
 	cf.Value = math.Float32frombits(floatBits)
 	return cf
 }
 
-type CONSTANT_Long_info struct {
+type ConstantLongInfo struct {
 	ConstBase
 	Value int64
 }
 
-func (c *CONSTANT_Long_info) String() string {
+func (c *ConstantLongInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadCONSTANT_Long_info(r io.Reader) *CONSTANT_Long_info {
-	cl := &CONSTANT_Long_info{}
+func ReadConstantLongInfo(r PoolReader) *ConstantLongInfo {
+	cl := &ConstantLongInfo{}
+	cl.Pool = r.ConstantPool
 	cl.Tag = CONSTANT_Long
-	failErr(readInt64(r, &cl.Value))
+	cl.Type = "CONSTANT_Long_info"
+	failErr(ioutil.ReadInt64(r, &cl.Value))
 	return cl
 }
 
-type CONSTANT_Double_info struct {
+type ConstantDoubleInfo struct {
 	ConstBase
 	Value float64
 }
 
-func (c *CONSTANT_Double_info) String() string {
+func (c *ConstantDoubleInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadCONSTANT_Double_info(r io.Reader) *CONSTANT_Double_info {
-	cd := &CONSTANT_Double_info{}
+func ReadConstantDoubleInfo(r PoolReader) *ConstantDoubleInfo {
+	cd := &ConstantDoubleInfo{}
+	cd.Pool = r.ConstantPool
 	cd.Tag = CONSTANT_Double
-	read(r, &cd.Value)
+	cd.Type = "CONSTANT_Double_info"
+	failErr(binary.Read(r, binary.BigEndian, &cd.Value))
 	return cd
 }
 
-type CONSTANT_NameAndType_info struct {
+type ConstantNameAndTypeInfo struct {
 	ConstBase
 	NameIndex       uint16
 	DescriptorIndex uint16
 }
 
-func (c *CONSTANT_NameAndType_info) String() string {
+func (c *ConstantNameAndTypeInfo) String() string {
 	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
-func ReadCONSTANT_NameAndType_info(r io.Reader) *CONSTANT_NameAndType_info {
-	nat := &CONSTANT_NameAndType_info{}
+func ReadConstantNameAndTypeInfo(r PoolReader) *ConstantNameAndTypeInfo {
+	nat := &ConstantNameAndTypeInfo{}
+	nat.Pool = r.ConstantPool
 	nat.Tag = CONSTANT_NameAndType
-	failErr(readUint16(r, &nat.NameIndex))
-	failErr(readUint16(r, &nat.DescriptorIndex))
+	nat.Type = "CONSTANT_NameAndType_info"
+	failErr(ioutil.ReadUint16(r, &nat.NameIndex))
+	failErr(ioutil.ReadUint16(r, &nat.DescriptorIndex))
 	return nat
 }
 
 // TODO: this probably does not need to be anything other than a string
-type CONSTANT_Utf8_info struct {
+type ConstantUtf8Info struct {
 	ConstBase
 	Value string
 }
 
-func (c *CONSTANT_Utf8_info) String() string {
+func (c *ConstantUtf8Info) String() string {
 	// TODO: this was %q but changed to %s
 	return fmt.Sprintf("%s", c.Value)
 }
 
-func ReadCONSTANT_Utf8_info(r io.Reader) *CONSTANT_Utf8_info {
-	u := &CONSTANT_Utf8_info{}
+func ReadConstantUtf8Info(r PoolReader) *ConstantUtf8Info {
+	u := &ConstantUtf8Info{}
+	u.Pool = r.ConstantPool
 	u.Tag = CONSTANT_Utf8
+	u.Type = "CONSTANT_Utf8_info"
 	var length uint16
-	failErr(readUint16(r, &length))
+	failErr(ioutil.ReadUint16(r, &length))
 	buff := make([]uint8, length)
 	read, err := io.ReadFull(r, buff)
 	failErr(err)

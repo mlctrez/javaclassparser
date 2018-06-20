@@ -11,7 +11,7 @@ import (
 func main() {
 
 	var info interface{}
-	info = cpool.ReadCONSTANT_String_info(bytes.NewBuffer([]byte{0, 0, 0, 0}))
+	info = cpool.ReadConstantStringInfo(bytes.NewBuffer([]byte{0, 0, 0, 0}))
 	_ = info
 
 	fmt.Println(reflect.TypeOf(info).String())

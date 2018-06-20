@@ -2,21 +2,24 @@ package cpool
 
 import (
 	"fmt"
-	"io"
+
+	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
-type CONSTANT_Class_info struct {
+type ConstantClassInfo struct {
 	ConstBase
 	NameIndex uint16
 }
 
-func (c *CONSTANT_Class_info) String() string {
+func (c *ConstantClassInfo) String() string {
 	return fmt.Sprintf("%s", c.Pool.Lookup(c.NameIndex))
 }
 
-func ReadCONSTANT_Class_info(r io.Reader) *CONSTANT_Class_info {
-	c := &CONSTANT_Class_info{}
+func ReadConstantClassInfo(r PoolReader) *ConstantClassInfo {
+	c := &ConstantClassInfo{}
+	c.Pool = r.ConstantPool
 	c.Tag = CONSTANT_Class
-	failErr(readUint16(r, &c.NameIndex))
+	c.Type = "CONSTANT_Class_info"
+	failErr(ioutil.ReadUint16(r, &c.NameIndex))
 	return c
 }

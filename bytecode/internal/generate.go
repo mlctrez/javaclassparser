@@ -67,6 +67,9 @@ func main() {
 	fmt.Fprintln(out, "\treturn m")
 	fmt.Fprintln(out, "}")
 
+	var simple = "func r%s(c *Context) (*ByteCode, error) { return Simple(%q, c) }\n"
+	var withArgs = "func r%s(c *Context) (*ByteCode, error) { return WithArgs(%q, c, %t, %d) }\n"
+
 	for _, parts := range byteCodeLines {
 
 		args, index := determineOpCodeType(parts[2])
@@ -74,20 +77,18 @@ func main() {
 		upperHex := strings.ToUpper(parts[1])
 
 		if args == 0 {
-			fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
-			fmt.Fprintf(out, "return Simple(%q, c) }\n", parts[0])
+			fmt.Fprintf(out, simple, upperHex, parts[0])
 			continue
 		}
 
 		if args > 0 {
-			fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
-			fmt.Fprintf(out, "return WithArgs(%q, c, %t, %d) }\n", parts[0], index, args)
+			fmt.Fprintf(out, withArgs, upperHex, parts[0], index, args)
 			continue
 		}
 
 		fmt.Fprintf(out, "func r%s(c *Context) (*ByteCode, error) { ", upperHex)
 
-		switch parts[0]{
+		switch parts[0] {
 		case "tableswitch":
 			fmt.Fprintf(out, "return TableSwitch(%q, c.p, c) ", "tableswitch")
 		case "lookupswitch":

@@ -9,7 +9,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mlctrez/javaclassparser"
@@ -62,7 +64,7 @@ func main() {
 	}
 	defer func() {
 		if config.logElapsed {
-			log.Println(time.Since(start).Seconds())
+			fmt.Println(time.Since(start).Seconds(), "elapsed seconds")
 		}
 	}()
 
@@ -79,14 +81,36 @@ func main() {
 
 	rc, err := zip.OpenReader(config.archive)
 	failErr(err)
-	read(config, config.archive, rc)
+	parsers := read(config, config.archive, rc)
+	fmt.Println("executed", len(parsers), "parsers")
 
 }
 
-func read(config *ParserConfig, path string, rc *zip.ReadCloser) {
+func read(config *ParserConfig, path string, rc *zip.ReadCloser) []*javaclassparser.ClassParser {
 	if config.printArchives {
 		fmt.Println("reading", path)
 	}
+
+	result := make([]*javaclassparser.ClassParser, 0)
+
+	workWaitGroup := &sync.WaitGroup{}
+	workChan := make(chan *work, 50)
+
+	resultChan := make(chan *javaclassparser.ClassParser, 50)
+	resultWaitGroup := &sync.WaitGroup{}
+
+	go func() {
+		for j := range resultChan {
+			result = append(result, j)
+			resultWaitGroup.Done()
+		}
+
+	}()
+
+	for i := 0; i < runtime.NumCPU(); i++ {
+		go parseWorker(workWaitGroup, resultWaitGroup, workChan, resultChan)
+	}
+
 	for _, f := range rc.File {
 		if f.FileInfo().IsDir() {
 			continue
@@ -108,7 +132,7 @@ func read(config *ParserConfig, path string, rc *zip.ReadCloser) {
 			if err != nil {
 				panic(err)
 			}
-			read(config, path+"!"+f.Name, jarReader)
+			result = append(result, read(config, path+"!"+f.Name, jarReader)...)
 			jarReader.Close()
 			os.Remove(tf.Name())
 		}
@@ -128,15 +152,40 @@ func read(config *ParserConfig, path string, rc *zip.ReadCloser) {
 			if config.printClassNames {
 				fmt.Println("reading", f.Name)
 			}
-			jcp := &javaclassparser.ClassParser{}
-			jcp.Parse(bytes.NewReader(bb.Bytes()))
-			if "all" == config.debugClass || config.debugClass == f.Name {
-				jcp.DebugOut()
-			}
+
+			workWaitGroup.Add(1)
+			workChan <- &work{Class: f.Name, Path: path, ByteCode: bb, config: config}
 
 		}
 		rp.Close()
+	}
+	workWaitGroup.Wait()
+	close(workChan)
 
+	resultWaitGroup.Wait()
+	close(resultChan)
+
+	return result
+
+}
+
+type work struct {
+	Class    string
+	Path     string
+	ByteCode *bytes.Buffer
+	config   *ParserConfig
+}
+
+func parseWorker(wg *sync.WaitGroup, rwg *sync.WaitGroup, workChan <-chan *work, resultChan chan<- *javaclassparser.ClassParser) {
+	for w := range workChan {
+		jcp := &javaclassparser.ClassParser{Class: w.Class, Path: w.Path}
+		jcp.Parse(w.ByteCode)
+		if "all" == w.config.debugClass || w.config.debugClass == w.Class {
+			jcp.DebugOut()
+		}
+		rwg.Add(1)
+		resultChan <- jcp
+		wg.Done()
 	}
 
 }

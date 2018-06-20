@@ -1,47 +1,51 @@
 package cpool
 
 import (
-	"io"
+	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
-type CONSTANT_MethodHandle_info struct {
+type ConstantMethodHandleInfo struct {
 	ConstBase
 	ReferenceKind  uint8
 	ReferenceIndex uint16
 }
 
-func ReadCONSTANT_MethodHandle_info(r io.Reader) *CONSTANT_MethodHandle_info {
-	mh := &CONSTANT_MethodHandle_info{}
+func ReadConstantMethodHandleInfo(r PoolReader) *ConstantMethodHandleInfo {
+	mh := &ConstantMethodHandleInfo{}
+	mh.Pool = r.ConstantPool
 	mh.Tag = CONSTANT_MethodHandle
-	failErr(readUint8(r, &mh.ReferenceKind))
-	failErr(readUint16(r, &mh.ReferenceIndex))
+	mh.Type = "CONSTANT_MethodHandle_info"
+	failErr(ioutil.ReadUint8(r, &mh.ReferenceKind))
+	failErr(ioutil.ReadUint16(r, &mh.ReferenceIndex))
 	return mh
 }
 
-type CONSTANT_MethodType_info struct {
+type ConstantMethodTypeInfo struct {
 	ConstBase
 	DescriptorIndex uint16
 }
 
-func ReadCONSTANT_MethodType_info(r io.Reader) *CONSTANT_MethodType_info {
-	mt := &CONSTANT_MethodType_info{}
+func ReadConstantMethodTypeInfo(r PoolReader) *ConstantMethodTypeInfo {
+	mt := &ConstantMethodTypeInfo{}
+	mt.Pool = r.ConstantPool
 	mt.Tag = CONSTANT_MethodType
-	failErr(readUint16(r,&mt.DescriptorIndex))
+	mt.Type = "CONSTANT_MethodType_info"
+	failErr(ioutil.ReadUint16(r, &mt.DescriptorIndex))
 	return mt
 }
 
-type CONSTANT_InvokeDynamic_info struct {
+type ConstantInvokeDynamicInfo struct {
 	ConstBase
 	BoostrapMethodAttrIndex uint16
 	NameAndTypeIndex        uint16
 }
 
-func ReadCONSTANT_InvokeDynamic_info(r io.Reader) *CONSTANT_InvokeDynamic_info {
-	cid := &CONSTANT_InvokeDynamic_info{}
+func ReadConstantInvokeDynamicInfo(r PoolReader) *ConstantInvokeDynamicInfo {
+	cid := &ConstantInvokeDynamicInfo{}
+	cid.Pool = r.ConstantPool
 	cid.Tag = CONSTANT_InvokeDynamic
-	failErr(readUint16(r, &cid.BoostrapMethodAttrIndex))
-	failErr(readUint16(r, &cid.NameAndTypeIndex))
+	cid.Type = "CONSTANT_InvokeDynamic_info"
+	failErr(ioutil.ReadUint16(r, &cid.BoostrapMethodAttrIndex))
+	failErr(ioutil.ReadUint16(r, &cid.NameAndTypeIndex))
 	return cid
 }
-
-
