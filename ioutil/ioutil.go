@@ -21,18 +21,18 @@ func ReadUint16(r io.Reader, i *uint16) (err error) {
 	return err
 }
 
-func ReadInt32(r io.Reader, i *int32) (err error) {
-	b := []byte{0, 0, 0, 0}
-	if _, err := io.ReadFull(r, b); err == nil {
-		*i = int32(binary.BigEndian.Uint32(b))
-	}
-	return err
-}
-
 func ReadUint32(r io.Reader, i *uint32) (err error) {
 	b := []byte{0, 0, 0, 0}
 	if _, err := io.ReadFull(r, b); err == nil {
 		*i = binary.BigEndian.Uint32(b)
+	}
+	return err
+}
+
+func ReadInt32(r io.Reader, i *int32) (err error) {
+	b := []byte{0, 0, 0, 0}
+	if _, err := io.ReadFull(r, b); err == nil {
+		*i = int32(binary.BigEndian.Uint32(b))
 	}
 	return err
 }

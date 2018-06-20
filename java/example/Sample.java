@@ -11,4 +11,16 @@ public class Sample implements SampleInterface {
     System.out.println(al);
     return arg;
   }
+
+  public void sampleComplexMethod() {
+    String foo = "bar";
+    if (foo == null) {
+      System.out.println("foo is null");
+    }
+
+    int baaz = 0;
+    if (baaz > 10) {
+      System.out.println("baaz > 10");
+    }
+  }
 }

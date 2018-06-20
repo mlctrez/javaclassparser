@@ -92,6 +92,10 @@ func (bc *ByteCode) StringWithIndex(pool cpool.ConstantPool) string {
 			index := uint16(bc.Arguments[0])*255 + uint16(bc.Arguments[1])
 			return fmt.Sprintf("%s %v", bc.Operand, pool.Lookup(index))
 		}
+		if bc.Operand == "ldc" {
+			return fmt.Sprintf("%s %q", bc.Operand, pool.Lookup(uint16(bc.Arguments[0])))
+		}
+
 	}
 	return bc.String()
 }
@@ -104,7 +108,7 @@ bytes constituting three signed 32-bit values: default, low, and high. Immediate
 a series of high - low + 1 signed 32-bit offsets. The value low must be less than or equal to high.
 The high - low + 1 signed 32-bit offsets are treated as a 0-based jump table. Each of these signed 32-bit
 values is constructed as (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4.
- */
+*/
 func TableSwitch(op string, p *uint32, r io.Reader) (*ByteCode, error) {
 	bc := &ByteCode{Operand: op, Offset: *p}
 

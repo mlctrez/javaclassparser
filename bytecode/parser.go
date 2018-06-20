@@ -1,6 +1,5 @@
 package bytecode
 
-
 func buildOpCodeFunctionMap() map[byte]Reader {
 	m := make(map[byte]Reader)
 	m[0x00] = r00

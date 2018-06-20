@@ -59,36 +59,36 @@ func ReadFieldInfo(r cpool.PoolReader) *FieldInfo {
 	return fi
 }
 
-type SourceFile_attribute struct {
+type SourceFileAttribute struct {
 	AttributeBase
 	AttributeNameIndex uint16
 	AttributeLength    uint64
 	SourceFileIndex    uint16
 }
 
-func (s *SourceFile_attribute) String() string {
+func (s *SourceFileAttribute) String() string {
 	return fmt.Sprintf("%s %s", TypeName(s), s.Pool.Lookup(s.SourceFileIndex))
 }
 
-type ConstantValue_attribute struct {
+type ConstantValueAttribute struct {
 	AttributeBase
 	ConstantValueIndex uint16
 }
 
-func (s *ConstantValue_attribute) String() string {
+func (s *ConstantValueAttribute) String() string {
 	return fmt.Sprintf("%s %v", TypeName(s), s.Pool.Lookup(s.ConstantValueIndex))
 }
 
-type Code_attribute struct {
+type CodeAttribute struct {
 	AttributeBase
 	MaxStack       uint16
 	MaxLocals      uint16
 	Code           []*bytecode.ByteCode
-	ExceptionTable []*Code_attribute_exception_table
+	ExceptionTable []*CodeAttributeExceptionTable
 	Attributes     []interface{}
 }
 
-type Code_attribute_exception_table struct {
+type CodeAttributeExceptionTable struct {
 	AttributeBase
 	StartPc   uint16
 	EndPc     uint16
@@ -96,12 +96,12 @@ type Code_attribute_exception_table struct {
 	CatchType uint16
 }
 
-func (c *Code_attribute_exception_table) String() string {
+func (c *CodeAttributeExceptionTable) String() string {
 	return fmt.Sprintf("Start %X End %X Handler %X CatchType %X", c.StartPc, c.EndPc, c.HandlerPc, c.CatchType)
 }
 
-func ReadCodeAttributeExceptionTable(r io.Reader) *Code_attribute_exception_table {
-	et := &Code_attribute_exception_table{}
+func ReadCodeAttributeExceptionTable(r io.Reader) *CodeAttributeExceptionTable {
+	et := &CodeAttributeExceptionTable{}
 	failErr(ioutil.ReadUint16(r, &et.StartPc))
 	failErr(ioutil.ReadUint16(r, &et.EndPc))
 	failErr(ioutil.ReadUint16(r, &et.HandlerPc))
@@ -109,12 +109,12 @@ func ReadCodeAttributeExceptionTable(r io.Reader) *Code_attribute_exception_tabl
 	return et
 }
 
-type Exceptions_attribute struct {
+type ExceptionsAttribute struct {
 	AttributeBase
 	Exceptions []uint16
 }
 
-func (s *Exceptions_attribute) String() string {
+func (s *ExceptionsAttribute) String() string {
 	el := make([]interface{}, len(s.Exceptions))
 	for i, e := range s.Exceptions {
 		el[i] = s.Pool.Lookup(e)
@@ -122,8 +122,8 @@ func (s *Exceptions_attribute) String() string {
 	return fmt.Sprintf("%v %v", TypeName(s), el)
 }
 
-func ReadCodeAttribute(r cpool.PoolReader) *Code_attribute {
-	c := &Code_attribute{}
+func ReadCodeAttribute(r cpool.PoolReader) *CodeAttribute {
+	c := &CodeAttribute{}
 	failErr(ioutil.ReadUint16(r, &c.MaxStack))
 	failErr(ioutil.ReadUint16(r, &c.MaxLocals))
 
@@ -133,7 +133,7 @@ func ReadCodeAttribute(r cpool.PoolReader) *Code_attribute {
 
 	var exceptionTableLength uint16
 	failErr(ioutil.ReadUint16(r, &exceptionTableLength))
-	c.ExceptionTable = make([]*Code_attribute_exception_table, exceptionTableLength)
+	c.ExceptionTable = make([]*CodeAttributeExceptionTable, exceptionTableLength)
 	var i uint16
 	for i = 0; i < exceptionTableLength; i++ {
 		c.ExceptionTable[i] = ReadCodeAttributeExceptionTable(r)
@@ -168,12 +168,12 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 
 	switch attributeName.Value {
 	case "SourceFile":
-		s := &SourceFile_attribute{}
+		s := &SourceFileAttribute{}
 		s.Pool = cp
 		failErr(ioutil.ReadUint16(lr, &s.SourceFileIndex))
 		return s
 	case "ConstantValue":
-		c := &ConstantValue_attribute{}
+		c := &ConstantValueAttribute{}
 		c.Pool = cp
 		failErr(ioutil.ReadUint16(lr, &c.ConstantValueIndex))
 		return c
@@ -181,7 +181,7 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 		lpr := cpool.PoolReader{Reader: lr, ConstantPool: cp}
 		return ReadCodeAttribute(lpr)
 	case "Exceptions":
-		ea := &Exceptions_attribute{}
+		ea := &ExceptionsAttribute{}
 		ea.Pool = cp
 		var numExceptions uint16
 		failErr(ioutil.ReadUint16(lr, &numExceptions))
@@ -214,7 +214,13 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 	case "org.aspectj.weaver.AjSynthetic":
 	case "org.aspectj.weaver.WeaverVersion":
 	case "org.aspectj.weaver.WeaverState":
+	case "org.aspectj.weaver.Advice":
+	case "org.aspectj.weaver.Aspect":
 	case "org.aspectj.weaver.EffectiveSignature":
+	case "org.aspectj.weaver.SourceContext":
+	case "org.aspectj.weaver.Privileged":
+	case "org.aspectj.weaver.TypeMunger":
+	case "org.aspectj.weaver.Declare":
 
 	default:
 		//if !strings.HasPrefix(attributeName.Value, "org.aspectj") {

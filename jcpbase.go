@@ -133,7 +133,7 @@ func (jcp *ClassParser) SummarizeOut() {
 		_ = i
 		for i := 0; i < len(f.Attributes); i++ {
 			attr := f.Attributes[i]
-			if code, ok := attr.(*attribute.Code_attribute); ok {
+			if code, ok := attr.(*attribute.CodeAttribute); ok {
 				methodName := jcp.Lookup(f.NameIndex)
 				className := jcp.Lookup(jcp.classNameIndex)
 				//fmt.Println("class",reflect.TypeOf(className))
@@ -170,7 +170,7 @@ func (jcp *ClassParser) DebugOut() {
 		fmt.Println(i, f)
 		for i := 0; i < len(f.Attributes); i++ {
 			attr := f.Attributes[i]
-			if code, ok := attr.(*attribute.Code_attribute); ok {
+			if code, ok := attr.(*attribute.CodeAttribute); ok {
 				for j := 0; j < len(code.Code); j++ {
 					instruction := code.Code[j]
 					fmt.Printf(" Code %04X %s\n", instruction.Offset, instruction.StringWithIndex(jcp))
