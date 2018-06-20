@@ -21,7 +21,7 @@ func (c *ConstantStringInfo) String() string {
 func ReadConstantStringInfo(r PoolReader) *ConstantStringInfo {
 	cs := &ConstantStringInfo{}
 	cs.Pool = r.ConstantPool
-	cs.Tag = CONSTANT_String
+	cs.Tag = ConstantString
 	cs.Type = "CONSTANT_String_info"
 	failErr(ioutil.ReadUint16(r, &cs.StringIndex))
 	return cs
@@ -39,7 +39,7 @@ func (c *ConstantIntegerInfo) String() string {
 func ReadConstantIntegerInfo(r PoolReader) *ConstantIntegerInfo {
 	ci := &ConstantIntegerInfo{}
 	ci.Pool = r.ConstantPool
-	ci.Tag = CONSTANT_Integer
+	ci.Tag = ConstantInteger
 	ci.Type = "CONSTANT_Integer_info"
 	failErr(ioutil.ReadInt32(r, &ci.Value))
 	return ci
@@ -57,7 +57,7 @@ func (c *ConstantFloatInfo) String() string {
 func ReadConstantFloatInfo(r PoolReader) *ConstantFloatInfo {
 	cf := &ConstantFloatInfo{}
 	cf.Pool = r.ConstantPool
-	cf.Tag = CONSTANT_Float
+	cf.Tag = ConstantFloat
 	cf.Type = "CONSTANT_Float_info"
 	var floatBits uint32
 	failErr(ioutil.ReadUint32(r, &floatBits))
@@ -77,7 +77,7 @@ func (c *ConstantLongInfo) String() string {
 func ReadConstantLongInfo(r PoolReader) *ConstantLongInfo {
 	cl := &ConstantLongInfo{}
 	cl.Pool = r.ConstantPool
-	cl.Tag = CONSTANT_Long
+	cl.Tag = ConstantLong
 	cl.Type = "CONSTANT_Long_info"
 	failErr(ioutil.ReadInt64(r, &cl.Value))
 	return cl
@@ -95,7 +95,7 @@ func (c *ConstantDoubleInfo) String() string {
 func ReadConstantDoubleInfo(r PoolReader) *ConstantDoubleInfo {
 	cd := &ConstantDoubleInfo{}
 	cd.Pool = r.ConstantPool
-	cd.Tag = CONSTANT_Double
+	cd.Tag = ConstantDouble
 	cd.Type = "CONSTANT_Double_info"
 	failErr(binary.Read(r, binary.BigEndian, &cd.Value))
 	return cd
@@ -114,7 +114,7 @@ func (c *ConstantNameAndTypeInfo) String() string {
 func ReadConstantNameAndTypeInfo(r PoolReader) *ConstantNameAndTypeInfo {
 	nat := &ConstantNameAndTypeInfo{}
 	nat.Pool = r.ConstantPool
-	nat.Tag = CONSTANT_NameAndType
+	nat.Tag = ConstantNameAndType
 	nat.Type = "CONSTANT_NameAndType_info"
 	failErr(ioutil.ReadUint16(r, &nat.NameIndex))
 	failErr(ioutil.ReadUint16(r, &nat.DescriptorIndex))
@@ -135,7 +135,7 @@ func (c *ConstantUtf8Info) String() string {
 func ReadConstantUtf8Info(r PoolReader) *ConstantUtf8Info {
 	u := &ConstantUtf8Info{}
 	u.Pool = r.ConstantPool
-	u.Tag = CONSTANT_Utf8
+	u.Tag = ConstantUtf8
 	u.Type = "CONSTANT_Utf8_info"
 	var length uint16
 	failErr(ioutil.ReadUint16(r, &length))

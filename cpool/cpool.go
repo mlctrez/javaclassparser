@@ -43,33 +43,33 @@ func Read(outerReader io.Reader) (ConstantPool, error) {
 		}
 		tag := ts[0]
 		switch tag {
-		case CONSTANT_Class:
+		case ConstantClass:
 			pi.constantPool[i] = ReadConstantClassInfo(r)
-		case CONSTANT_Fieldref:
+		case ConstantFieldref:
 			pi.constantPool[i] = ReadConstantFieldrefInfo(r)
-		case CONSTANT_Methodref:
+		case ConstantMethodref:
 			pi.constantPool[i] = ReadConstantMethodrefInfo(r)
-		case CONSTANT_InterfaceMethodref:
+		case ConstantInterfaceMethodref:
 			pi.constantPool[i] = ReadConstantInterfaceMethodrefInfo(r)
-		case CONSTANT_String:
+		case ConstantString:
 			pi.constantPool[i] = ReadConstantStringInfo(r)
-		case CONSTANT_Integer:
+		case ConstantInteger:
 			pi.constantPool[i] = ReadConstantIntegerInfo(r)
-		case CONSTANT_Float:
+		case ConstantFloat:
 			pi.constantPool[i] = ReadConstantFloatInfo(r)
-		case CONSTANT_Long:
+		case ConstantLong:
 			pi.constantPool[i] = ReadConstantLongInfo(r)
-		case CONSTANT_Double:
+		case ConstantDouble:
 			pi.constantPool[i] = ReadConstantDoubleInfo(r)
-		case CONSTANT_NameAndType:
+		case ConstantNameAndType:
 			pi.constantPool[i] = ReadConstantNameAndTypeInfo(r)
-		case CONSTANT_Utf8:
+		case ConstantUtf8:
 			pi.constantPool[i] = ReadConstantUtf8Info(r)
-		case CONSTANT_MethodHandle:
+		case ConstantMethodHandle:
 			pi.constantPool[i] = ReadConstantMethodHandleInfo(r)
-		case CONSTANT_MethodType:
+		case ConstantMethodType:
 			pi.constantPool[i] = ReadConstantMethodTypeInfo(r)
-		case CONSTANT_InvokeDynamic:
+		case ConstantInvokeDynamic:
 			pi.constantPool[i] = ReadConstantInvokeDynamicInfo(r)
 		default:
 			panic("unknown tag in constantPool : " + strconv.Itoa(int(tag)))
@@ -83,7 +83,7 @@ func Read(outerReader io.Reader) (ConstantPool, error) {
 			The constant_pool index n+1 must be valid but is considered unusable.
 		*/
 		switch tag {
-		case CONSTANT_Double, CONSTANT_Long:
+		case ConstantDouble, ConstantLong:
 			i++
 		}
 	}
@@ -105,7 +105,7 @@ func (cp *poolImpl) DebugOut() {
 		if pe == nil {
 			continue
 		}
-		fmt.Printf("pool %04X %-25s %s\n", i, TypeName(pe), pe)
+		fmt.Printf("pool %04X %-30s %s\n", i, TypeName(pe), pe)
 	}
 }
 

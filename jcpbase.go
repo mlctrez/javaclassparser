@@ -149,6 +149,8 @@ func (jcp *ClassParser) SummarizeOut() {
 
 func (jcp *ClassParser) DebugOut() {
 
+	fmt.Println("**************", jcp.Path, jcp.Class)
+
 	jcp.constantPool.DebugOut()
 
 	fmt.Print("access, className, superClass = ")

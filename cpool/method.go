@@ -13,7 +13,7 @@ type ConstantMethodHandleInfo struct {
 func ReadConstantMethodHandleInfo(r PoolReader) *ConstantMethodHandleInfo {
 	mh := &ConstantMethodHandleInfo{}
 	mh.Pool = r.ConstantPool
-	mh.Tag = CONSTANT_MethodHandle
+	mh.Tag = ConstantMethodHandle
 	mh.Type = "CONSTANT_MethodHandle_info"
 	failErr(ioutil.ReadUint8(r, &mh.ReferenceKind))
 	failErr(ioutil.ReadUint16(r, &mh.ReferenceIndex))
@@ -28,7 +28,7 @@ type ConstantMethodTypeInfo struct {
 func ReadConstantMethodTypeInfo(r PoolReader) *ConstantMethodTypeInfo {
 	mt := &ConstantMethodTypeInfo{}
 	mt.Pool = r.ConstantPool
-	mt.Tag = CONSTANT_MethodType
+	mt.Tag = ConstantMethodType
 	mt.Type = "CONSTANT_MethodType_info"
 	failErr(ioutil.ReadUint16(r, &mt.DescriptorIndex))
 	return mt
@@ -43,7 +43,7 @@ type ConstantInvokeDynamicInfo struct {
 func ReadConstantInvokeDynamicInfo(r PoolReader) *ConstantInvokeDynamicInfo {
 	cid := &ConstantInvokeDynamicInfo{}
 	cid.Pool = r.ConstantPool
-	cid.Tag = CONSTANT_InvokeDynamic
+	cid.Tag = ConstantInvokeDynamic
 	cid.Type = "CONSTANT_InvokeDynamic_info"
 	failErr(ioutil.ReadUint16(r, &cid.BoostrapMethodAttrIndex))
 	failErr(ioutil.ReadUint16(r, &cid.NameAndTypeIndex))

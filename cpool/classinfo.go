@@ -18,7 +18,7 @@ func (c *ConstantClassInfo) String() string {
 func ReadConstantClassInfo(r PoolReader) *ConstantClassInfo {
 	c := &ConstantClassInfo{}
 	c.Pool = r.ConstantPool
-	c.Tag = CONSTANT_Class
+	c.Tag = ConstantClass
 	c.Type = "CONSTANT_Class_info"
 	failErr(ioutil.ReadUint16(r, &c.NameIndex))
 	return c

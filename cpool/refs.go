@@ -27,7 +27,7 @@ func (c *ConstantFieldrefInfo) String() string {
 func ReadConstantFieldrefInfo(r PoolReader) *ConstantFieldrefInfo {
 	fr := &ConstantFieldrefInfo{}
 	fr.Pool = r.ConstantPool
-	fr.Tag = CONSTANT_Fieldref
+	fr.Tag = ConstantFieldref
 	fr.Type = "CONSTANT_Fieldref_info"
 	fr.ReadRefBaseIndexes(r)
 	return fr
@@ -42,7 +42,7 @@ func (mr *ConstantMethodrefInfo) String() string {
 func ReadConstantMethodrefInfo(r PoolReader) *ConstantMethodrefInfo {
 	mr := &ConstantMethodrefInfo{}
 	mr.Pool = r.ConstantPool
-	mr.Tag = CONSTANT_Methodref
+	mr.Tag = ConstantMethodref
 	mr.Type = "CONSTANT_Methodref_info"
 	mr.ReadRefBaseIndexes(r)
 	return mr
@@ -57,7 +57,7 @@ func (imr *ConstantInterfaceMethodrefInfo) String() string {
 func ReadConstantInterfaceMethodrefInfo(r PoolReader) *ConstantInterfaceMethodrefInfo {
 	imr := &ConstantInterfaceMethodrefInfo{}
 	imr.Pool = r.ConstantPool
-	imr.Tag = CONSTANT_InterfaceMethodref
+	imr.Tag = ConstantInterfaceMethodref
 	imr.Type = "CONSTANT_InterfaceMethodref_info"
 	imr.ReadRefBaseIndexes(r)
 	return imr

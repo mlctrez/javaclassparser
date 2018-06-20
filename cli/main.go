@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -83,6 +84,17 @@ func main() {
 	failErr(err)
 	parsers := read(config, config.archive, rc)
 	fmt.Println("executed", len(parsers), "parsers")
+	sort.SliceStable(parsers, func(i, j int) bool {
+		if parsers[i].Path != parsers[j].Path {
+			return parsers[i].Path < parsers[j].Path
+		}
+		return parsers[i].Class < parsers[j].Class
+	})
+	for _, r := range parsers {
+		if "all" == config.debugClass || config.debugClass == r.Class {
+			r.DebugOut()
+		}
+	}
 
 }
 
@@ -180,9 +192,6 @@ func parseWorker(wg *sync.WaitGroup, rwg *sync.WaitGroup, workChan <-chan *work,
 	for w := range workChan {
 		jcp := &javaclassparser.ClassParser{Class: w.Class, Path: w.Path}
 		jcp.Parse(w.ByteCode)
-		if "all" == w.config.debugClass || w.config.debugClass == w.Class {
-			jcp.DebugOut()
-		}
 		rwg.Add(1)
 		resultChan <- jcp
 		wg.Done()

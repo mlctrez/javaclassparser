@@ -2,7 +2,8 @@
 
 javac -d java java/example/*.java
 
-go run cli/main.go -archive java/example/Sample.class
+cd java/
+zip -r ../example.zip .
+cd ..
 
-
-go run cli/main.go -archive java/example/SampleInterface.class
+go run cli/main.go -pa -pc -dbc all -archive example.zip
