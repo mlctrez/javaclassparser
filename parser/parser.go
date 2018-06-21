@@ -10,9 +10,8 @@ import (
 	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
+// It's all at the following link
 // http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
-
-// TODO: re-work error propagation
 
 // New is the main entry point for parsing java byte code
 // The reader is expected to point at a class file byte stream
@@ -77,6 +76,11 @@ func (jcp *Class) readClassInfo(r io.Reader) (err error) {
 	if err = ioutil.ReadUint16(r, &jcp.superClassNameIndex); err != nil {
 		return
 	}
+
+	// calculated once here to avoid multiple sprintfs when using it to sort
+	jcp.Name = fmt.Sprintf("%s", jcp.pool.Lookup(jcp.classNameIndex))
+	jcp.SuperClass = fmt.Sprintf("%s", jcp.pool.Lookup(jcp.superClassNameIndex))
+
 	err = (&jcp.accessFlags).Validate()
 	return
 }
@@ -146,9 +150,6 @@ func (jcp *Class) readAttributes(r cpool.PoolReader) (err error) {
 }
 
 type Class struct {
-	Path  string
-	Class string
-
 	magic               uint32
 	major               uint16
 	minor               uint16
@@ -160,81 +161,12 @@ type Class struct {
 	fields              []*attribute.FieldInfo
 	methods             []*attribute.MethodInfo
 	attributes          []interface{}
+
+	// calculated fields
+	Name       string
+	SuperClass string
 }
 
 func (jcp *Class) Visit(f func(interface{})) {
 	jcp.pool.Visit(f)
-}
-
-func (jcp *Class) SummarizeOut() {
-	for i, f := range jcp.methods {
-		_ = i
-		for i := 0; i < len(f.Attributes); i++ {
-			attr := f.Attributes[i]
-			if code, ok := attr.(*attribute.CodeAttribute); ok {
-				methodName := jcp.pool.Lookup(f.NameIndex)
-				className := jcp.pool.Lookup(jcp.classNameIndex)
-				//fmt.Println("class",reflect.TypeOf(className))
-				//fmt.Println("method",reflect.TypeOf(methodName))
-
-				if len(code.Code) > 400 {
-					fmt.Printf("%05d %s.%s\n", len(code.Code), className, methodName)
-				}
-			}
-		}
-	}
-}
-
-func (jcp *Class) ClassName() string {
-	return fmt.Sprintf("%s", jcp.pool.Lookup(jcp.classNameIndex))
-}
-
-func (jcp *Class) DebugOut() {
-
-	fmt.Println("**************", jcp.Path, jcp.Class)
-
-	jcp.pool.DebugOut()
-
-	fmt.Print("access, className, superClass = ")
-	fmt.Println(jcp.accessFlags, jcp.pool.Lookup(jcp.classNameIndex), jcp.pool.Lookup(jcp.superClassNameIndex))
-
-	for i, itf := range jcp.interfaces {
-		fmt.Printf("interface %3d %s\n", i, jcp.pool.Lookup(itf))
-	}
-
-	fmt.Println("*** class fields")
-
-	for i, f := range jcp.fields {
-		fmt.Println(i, f)
-	}
-
-	fmt.Println("*** class methods")
-
-	for i, f := range jcp.methods {
-		fmt.Println(i, f)
-		for i := 0; i < len(f.Attributes); i++ {
-			attr := f.Attributes[i]
-			if code, ok := attr.(*attribute.CodeAttribute); ok {
-				for j := 0; j < len(code.Code); j++ {
-					instruction := code.Code[j]
-					fmt.Printf(" Code %04X %s\n", instruction.Offset, instruction.StringWithIndex(jcp.pool))
-				}
-				for j := 0; j < len(code.ExceptionTable); j++ {
-					fmt.Printf(" ExceptionTable %+v\n", code.ExceptionTable[j])
-				}
-				for j := 0; j < len(code.Attributes); j++ {
-					fmt.Printf(" Attributes %+v\n", code.Attributes[j])
-				}
-			} else {
-				fmt.Printf(" attribute %d %+v\n", i, f.Attributes[i])
-			}
-		}
-	}
-
-	fmt.Println("*** class attributes")
-
-	for i, f := range jcp.attributes {
-		fmt.Println(i, f)
-	}
-
 }

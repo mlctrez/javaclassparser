@@ -14,62 +14,14 @@ import (
 	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
-func failErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-type AttributeBase struct {
+type baseAttribute struct {
 	Pool cpool.ConstantPool
 }
 
-type FieldInfo struct {
-	AttributeBase
-	AccessFlags     aflag.FieldAccessFlags
-	NameIndex       uint16
-	DescriptorIndex uint16
-	Attributes      []interface{}
-}
-
-func (c *FieldInfo) String() string {
-	af := c.AccessFlags
-	name := c.Pool.Lookup(c.NameIndex)
-	descriptor := c.Pool.Lookup(c.DescriptorIndex)
-	attributes := c.Attributes
-	return fmt.Sprintf("%s %s %s %s", af, name, descriptor, attributes)
-}
-
-func ReadFieldInfo(r cpool.PoolReader) (fi *FieldInfo, err error) {
-	fi = &FieldInfo{}
-	fi.Pool = r.ConstantPool
-
-	if fi.AccessFlags, err = aflag.ReadFieldAccessFlags(r); err != nil {
-		return
-	}
-	if err = ioutil.ReadUint16(r, &fi.NameIndex); err != nil {
-		return
-	}
-	if err = ioutil.ReadUint16(r, &fi.DescriptorIndex); err != nil {
-		return
-	}
-
-	var count uint16
-	if err = ioutil.ReadUint16(r, &count); err != nil {
-		return
-	}
-	fi.Attributes = make([]interface{}, count)
-	var i uint16
-	for i = 0; i < count; i++ {
-		if fi.Attributes[i], err = ReadAttributeInfo(r); err != nil {
-			return
-		}
-	}
-	return
-}
-
+// SourceFileAttribute represents the original java source file name
+// See https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.10
 type SourceFileAttribute struct {
-	AttributeBase
+	baseAttribute
 	AttributeNameIndex uint16
 	AttributeLength    uint64
 	SourceFileIndex    uint16
@@ -80,7 +32,7 @@ func (s *SourceFileAttribute) String() string {
 }
 
 type ConstantValueAttribute struct {
-	AttributeBase
+	baseAttribute
 	ConstantValueIndex uint16
 }
 
@@ -89,7 +41,7 @@ func (s *ConstantValueAttribute) String() string {
 }
 
 type CodeAttribute struct {
-	AttributeBase
+	baseAttribute
 	MaxStack       uint16
 	MaxLocals      uint16
 	Code           []*bytecode.ByteCode
@@ -98,7 +50,7 @@ type CodeAttribute struct {
 }
 
 type CodeAttributeExceptionTable struct {
-	AttributeBase
+	baseAttribute
 	StartPc   uint16
 	EndPc     uint16
 	HandlerPc uint16
@@ -125,7 +77,7 @@ func ReadCodeAttributeExceptionTable(r io.Reader) (et *CodeAttributeExceptionTab
 }
 
 type ExceptionsAttribute struct {
-	AttributeBase
+	baseAttribute
 	Exceptions []uint16
 }
 
@@ -135,6 +87,18 @@ func (s *ExceptionsAttribute) String() string {
 		el[i] = s.Pool.Lookup(e)
 	}
 	return fmt.Sprintf("%v %v", TypeName(s), el)
+}
+
+func ReadExceptionsAttribute(r cpool.PoolReader) (ea *ExceptionsAttribute, err error) {
+	ea = &ExceptionsAttribute{}
+	ea.Pool = r.ConstantPool
+	var numExceptions uint16
+	if err = ioutil.ReadUint16(r, &numExceptions); err != nil {
+		return
+	}
+	ea.Exceptions = make([]uint16, numExceptions)
+	err = binary.Read(r, binary.BigEndian, &ea.Exceptions)
+	return
 }
 
 func ReadCodeAttribute(r cpool.PoolReader) (ca *CodeAttribute, err error) {
@@ -183,41 +147,33 @@ func ReadAttributeInfo(r cpool.PoolReader) (ai interface{}, err error) {
 	}
 
 	info := make([]uint8, attributeLength)
-	_, err = io.ReadFull(r, info)
-
-	lr := bytes.NewReader(info)
-	cp := r.ConstantPool
+	if _, err = io.ReadFull(r, info); err != nil {
+		return
+	}
 
 	var attributeName *cpool.ConstantUtf8Info
 	var ok bool
-	if attributeName, ok = cp.Lookup(attributeNameIndex).(*cpool.ConstantUtf8Info); !ok {
-		failErr(fmt.Errorf("invalid attributeNameIndex %X", attributeNameIndex))
+	if attributeName, ok = r.ConstantPool.Lookup(attributeNameIndex).(*cpool.ConstantUtf8Info); !ok {
+		err = fmt.Errorf("invalid attributeNameIndex %X", attributeNameIndex)
+		return
 	}
+	lr := cpool.PoolReader{Reader: bytes.NewReader(info), ConstantPool: r.ConstantPool}
 
 	switch attributeName.Value {
 	case "SourceFile":
 		s := &SourceFileAttribute{}
-		s.Pool = cp
+		s.Pool = r.ConstantPool
 		err = ioutil.ReadUint16(lr, &s.SourceFileIndex)
 		return s, err
 	case "ConstantValue":
 		c := &ConstantValueAttribute{}
-		c.Pool = cp
+		c.Pool = r.ConstantPool
 		err = ioutil.ReadUint16(lr, &c.ConstantValueIndex)
 		return c, err
 	case "Code":
-		lpr := cpool.PoolReader{Reader: lr, ConstantPool: cp}
-		return ReadCodeAttribute(lpr)
+		return ReadCodeAttribute(lr)
 	case "Exceptions":
-		ea := &ExceptionsAttribute{}
-		ea.Pool = cp
-		var numExceptions uint16
-		if err = ioutil.ReadUint16(lr, &numExceptions); err != nil {
-			return
-		}
-		ea.Exceptions = make([]uint16, numExceptions)
-		err = binary.Read(lr, binary.BigEndian, &ea.Exceptions)
-		return ea, err
+		return ReadExceptionsAttribute(lr)
 	case "EnclosingMethod":
 		// TODO: finish the remainder of these known ones from the spec
 	case "InnerClasses":
@@ -264,7 +220,7 @@ func TypeName(i interface{}) (name string) {
 }
 
 type MethodInfo struct {
-	AttributeBase
+	baseAttribute
 	AccessFlags     aflag.MethodAccessFlags
 	NameIndex       uint16
 	DescriptorIndex uint16

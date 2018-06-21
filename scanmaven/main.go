@@ -17,7 +17,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = exec.Command("go", "build", "-o", "jcp", "cli/main.go").CombinedOutput()
+	_, err = exec.Command("go", "build", "-o", "jcp", "cli/jcp/main.go").CombinedOutput()
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 			if strings.Contains(output, "unhandled attribute") {
 				log.Fatal(output)
 			}
-			fmt.Println(output, path)
+			fmt.Println(output)
 			if err != nil {
 				log.Fatal(err)
 				return nil
