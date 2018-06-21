@@ -18,13 +18,13 @@ func (c *ConstantStringInfo) String() string {
 	return fmt.Sprintf("%s", c.Pool.Lookup(c.StringIndex))
 }
 
-func ReadConstantStringInfo(r PoolReader) *ConstantStringInfo {
-	cs := &ConstantStringInfo{}
+func ReadConstantStringInfo(r PoolReader) (cs *ConstantStringInfo, err error) {
+	cs = &ConstantStringInfo{}
 	cs.Pool = r.ConstantPool
 	cs.Tag = ConstantString
 	cs.Type = "CONSTANT_String_info"
-	failErr(ioutil.ReadUint16(r, &cs.StringIndex))
-	return cs
+	err = ioutil.ReadUint16(r, &cs.StringIndex)
+	return
 }
 
 type ConstantIntegerInfo struct {
@@ -36,13 +36,13 @@ func (c *ConstantIntegerInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadConstantIntegerInfo(r PoolReader) *ConstantIntegerInfo {
-	ci := &ConstantIntegerInfo{}
+func ReadConstantIntegerInfo(r PoolReader) (ci *ConstantIntegerInfo, err error) {
+	ci = &ConstantIntegerInfo{}
 	ci.Pool = r.ConstantPool
 	ci.Tag = ConstantInteger
 	ci.Type = "CONSTANT_Integer_info"
-	failErr(ioutil.ReadInt32(r, &ci.Value))
-	return ci
+	err = ioutil.ReadInt32(r, &ci.Value)
+	return
 }
 
 type ConstantFloatInfo struct {
@@ -54,15 +54,18 @@ func (c *ConstantFloatInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadConstantFloatInfo(r PoolReader) *ConstantFloatInfo {
-	cf := &ConstantFloatInfo{}
+func ReadConstantFloatInfo(r PoolReader) (cf *ConstantFloatInfo, err error) {
+	cf = &ConstantFloatInfo{}
 	cf.Pool = r.ConstantPool
 	cf.Tag = ConstantFloat
 	cf.Type = "CONSTANT_Float_info"
 	var floatBits uint32
-	failErr(ioutil.ReadUint32(r, &floatBits))
+	err = ioutil.ReadUint32(r, &floatBits)
+	if err != nil {
+		return
+	}
 	cf.Value = math.Float32frombits(floatBits)
-	return cf
+	return
 }
 
 type ConstantLongInfo struct {
@@ -74,13 +77,13 @@ func (c *ConstantLongInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadConstantLongInfo(r PoolReader) *ConstantLongInfo {
-	cl := &ConstantLongInfo{}
+func ReadConstantLongInfo(r PoolReader) (cl *ConstantLongInfo, err error) {
+	cl = &ConstantLongInfo{}
 	cl.Pool = r.ConstantPool
 	cl.Tag = ConstantLong
 	cl.Type = "CONSTANT_Long_info"
-	failErr(ioutil.ReadInt64(r, &cl.Value))
-	return cl
+	err = ioutil.ReadInt64(r, &cl.Value)
+	return
 }
 
 type ConstantDoubleInfo struct {
@@ -92,13 +95,13 @@ func (c *ConstantDoubleInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadConstantDoubleInfo(r PoolReader) *ConstantDoubleInfo {
-	cd := &ConstantDoubleInfo{}
+func ReadConstantDoubleInfo(r PoolReader) (cd *ConstantDoubleInfo, err error) {
+	cd = &ConstantDoubleInfo{}
 	cd.Pool = r.ConstantPool
 	cd.Tag = ConstantDouble
 	cd.Type = "CONSTANT_Double_info"
-	failErr(binary.Read(r, binary.BigEndian, &cd.Value))
-	return cd
+	err = binary.Read(r, binary.BigEndian, &cd.Value)
+	return
 }
 
 type ConstantNameAndTypeInfo struct {
@@ -111,14 +114,16 @@ func (c *ConstantNameAndTypeInfo) String() string {
 	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
-func ReadConstantNameAndTypeInfo(r PoolReader) *ConstantNameAndTypeInfo {
-	nat := &ConstantNameAndTypeInfo{}
+func ReadConstantNameAndTypeInfo(r PoolReader) (nat *ConstantNameAndTypeInfo, err error) {
+	nat = &ConstantNameAndTypeInfo{}
 	nat.Pool = r.ConstantPool
 	nat.Tag = ConstantNameAndType
 	nat.Type = "CONSTANT_NameAndType_info"
-	failErr(ioutil.ReadUint16(r, &nat.NameIndex))
-	failErr(ioutil.ReadUint16(r, &nat.DescriptorIndex))
-	return nat
+	if err = ioutil.ReadUint16(r, &nat.NameIndex); err != nil {
+		return
+	}
+	err = ioutil.ReadUint16(r, &nat.DescriptorIndex)
+	return
 }
 
 // TODO: this probably does not need to be anything other than a string
@@ -132,19 +137,19 @@ func (c *ConstantUtf8Info) String() string {
 	return fmt.Sprintf("%s", c.Value)
 }
 
-func ReadConstantUtf8Info(r PoolReader) *ConstantUtf8Info {
-	u := &ConstantUtf8Info{}
+func ReadConstantUtf8Info(r PoolReader) (u *ConstantUtf8Info, err error) {
+	u = &ConstantUtf8Info{}
 	u.Pool = r.ConstantPool
 	u.Tag = ConstantUtf8
 	u.Type = "CONSTANT_Utf8_info"
 	var length uint16
-	failErr(ioutil.ReadUint16(r, &length))
+	if err = ioutil.ReadUint16(r, &length); err != nil {
+		return
+	}
 	buff := make([]uint8, length)
-	read, err := io.ReadFull(r, buff)
-	failErr(err)
-	if length != uint16(read) {
-		failErr(fmt.Errorf("incorrect length, expected %d but got %d", length, read))
+	if _, err := io.ReadFull(r, buff); err != nil {
+
 	}
 	u.Value = string(buff)
-	return u
+	return
 }

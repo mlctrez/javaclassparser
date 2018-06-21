@@ -3,6 +3,7 @@ package parser
 import (
 	"archive/zip"
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -212,3 +213,24 @@ func (jcp *Class) DebugOut() {
 	}
 
 }
+
+func NewConfigFromArgs() (config *Config) {
+	config = &Config{}
+
+	flag.StringVar(&config.Archive, "archive", "", "the war, jar or ear archive to scan")
+	flag.StringVar(&config.Class, "class", "", "only display information about this class")
+	flag.BoolVar(&config.PrintArchives, "pa", false, "print each archive name as it is read")
+	flag.BoolVar(&config.PrintClassNames, "pc", false, "print each class name as it is read")
+	flag.BoolVar(&config.PrintMethodRef, "pmr", false, "print method ref information")
+	flag.BoolVar(&config.LogElapsed, "le", true, "log total elapsed time")
+	flag.StringVar(&config.DebugClass, "dbc", "", "dump detailed byte code information for this class")
+
+	flag.Parse()
+
+	if config.Archive == "" {
+		fmt.Println("archive is required")
+		os.Exit(1)
+	}
+	return config
+}
+

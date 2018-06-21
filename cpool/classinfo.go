@@ -15,11 +15,11 @@ func (c *ConstantClassInfo) String() string {
 	return fmt.Sprintf("%s", c.Pool.Lookup(c.NameIndex))
 }
 
-func ReadConstantClassInfo(r PoolReader) *ConstantClassInfo {
-	c := &ConstantClassInfo{}
+func ReadConstantClassInfo(r PoolReader) (c *ConstantClassInfo, err error) {
+	c = &ConstantClassInfo{}
 	c.Pool = r.ConstantPool
 	c.Tag = ConstantClass
 	c.Type = "CONSTANT_Class_info"
-	failErr(ioutil.ReadUint16(r, &c.NameIndex))
-	return c
+	err = ioutil.ReadUint16(r, &c.NameIndex)
+	return
 }

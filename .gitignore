@@ -1,4 +1,5 @@
 .idea/
+*.txt
 *.class
 *.zip
 jcp

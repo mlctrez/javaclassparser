@@ -46,33 +46,33 @@ func Read(outerReader io.Reader) (cp ConstantPool, err error) {
 		tag := ts[0]
 		switch tag {
 		case ConstantClass:
-			pi.constantPool[i] = ReadConstantClassInfo(r)
+			pi.constantPool[i], err = ReadConstantClassInfo(r)
 		case ConstantFieldref:
-			pi.constantPool[i] = ReadConstantFieldrefInfo(r)
+			pi.constantPool[i], err = ReadConstantFieldrefInfo(r)
 		case ConstantMethodref:
-			pi.constantPool[i] = ReadConstantMethodrefInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodrefInfo(r)
 		case ConstantInterfaceMethodref:
-			pi.constantPool[i] = ReadConstantInterfaceMethodrefInfo(r)
+			pi.constantPool[i], err = ReadConstantInterfaceMethodrefInfo(r)
 		case ConstantString:
-			pi.constantPool[i] = ReadConstantStringInfo(r)
+			pi.constantPool[i], err = ReadConstantStringInfo(r)
 		case ConstantInteger:
-			pi.constantPool[i] = ReadConstantIntegerInfo(r)
+			pi.constantPool[i], err = ReadConstantIntegerInfo(r)
 		case ConstantFloat:
-			pi.constantPool[i] = ReadConstantFloatInfo(r)
+			pi.constantPool[i], err = ReadConstantFloatInfo(r)
 		case ConstantLong:
-			pi.constantPool[i] = ReadConstantLongInfo(r)
+			pi.constantPool[i], err = ReadConstantLongInfo(r)
 		case ConstantDouble:
-			pi.constantPool[i] = ReadConstantDoubleInfo(r)
+			pi.constantPool[i], err = ReadConstantDoubleInfo(r)
 		case ConstantNameAndType:
-			pi.constantPool[i] = ReadConstantNameAndTypeInfo(r)
+			pi.constantPool[i], err = ReadConstantNameAndTypeInfo(r)
 		case ConstantUtf8:
-			pi.constantPool[i] = ReadConstantUtf8Info(r)
+			pi.constantPool[i], err = ReadConstantUtf8Info(r)
 		case ConstantMethodHandle:
-			pi.constantPool[i] = ReadConstantMethodHandleInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodHandleInfo(r)
 		case ConstantMethodType:
-			pi.constantPool[i] = ReadConstantMethodTypeInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodTypeInfo(r)
 		case ConstantInvokeDynamic:
-			pi.constantPool[i] = ReadConstantInvokeDynamicInfo(r)
+			pi.constantPool[i], err = ReadConstantInvokeDynamicInfo(r)
 		default:
 			panic("unknown tag in constantPool : " + strconv.Itoa(int(tag)))
 		}
@@ -87,6 +87,9 @@ func Read(outerReader io.Reader) (cp ConstantPool, err error) {
 		switch tag {
 		case ConstantDouble, ConstantLong:
 			i++
+		}
+		if err != nil {
+			return
 		}
 	}
 
