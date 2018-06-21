@@ -6,4 +6,4 @@ cd java/
 zip -r ../example.zip .
 cd ..
 
-go run cli/main.go -pa -pc -dbc all -archive example.zip
+go run cli/jcp/main.go -pa -pc -dbc all -archive example.zip

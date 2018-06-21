@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/mlctrez/javaclassparser/cpool"
+	"github.com/mlctrez/javaclassparser/ioutil"
 )
 
 type ByteCode struct {
@@ -25,7 +26,7 @@ func Read(r io.Reader) (codes []*ByteCode, err error) {
 	}
 
 	var codeLength uint32
-	if err = binary.Read(r, binary.BigEndian, &codeLength); err != nil {
+	if err = ioutil.ReadUint32(r, &codeLength); err != nil {
 		return nil, err
 	}
 
@@ -109,10 +110,9 @@ a series of high - low + 1 signed 32-bit offsets. The value low must be less tha
 The high - low + 1 signed 32-bit offsets are treated as a 0-based jump table. Each of these signed 32-bit
 values is constructed as (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4.
 */
-func TableSwitch(op string, p *uint32, r io.Reader) (*ByteCode, error) {
-	bc := &ByteCode{Operand: op, Offset: *p}
+func TableSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
+	bc = &ByteCode{Operand: op, Offset: *p}
 
-	var err error
 	padding := 3 - *p%4
 	if padding > 0 {
 		*p = *p + padding
@@ -136,11 +136,10 @@ func TableSwitch(op string, p *uint32, r io.Reader) (*ByteCode, error) {
 		return nil, err
 	}
 
-	//panic(fmt.Sprintf("low=%d high=%d default=%d", lowByte, highByte, defaultByte))
-
 	jumpCodeLength := (highByte - lowByte) + 1
 	if jumpCodeLength < 1 {
-		panic(jumpCodeLength)
+		err = fmt.Errorf("error calculating jumpCodeLength low=%d high=%d default=%d", lowByte, highByte, defaultByte)
+		return
 	}
 	jumpCodes := make([]int32, jumpCodeLength)
 
@@ -161,9 +160,8 @@ type MatchOffset struct {
 	Offset int32
 }
 
-func LookupSwitch(op string, p *uint32, r io.Reader) (*ByteCode, error) {
-	bc := &ByteCode{Operand: op, Offset: *p}
-	var err error
+func LookupSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
+	bc = &ByteCode{Operand: op, Offset: *p}
 
 	padding := 3 - *p%4
 	if padding > 0 {
@@ -200,35 +198,31 @@ func LookupSwitch(op string, p *uint32, r io.Reader) (*ByteCode, error) {
 	}
 
 	*p = *p + 8 + uint32(nPairs*8)
-	return bc, nil
+	return
 }
 
-func Wide(op string, p *uint32, r io.Reader) (*ByteCode, error) {
-	bc := &ByteCode{Operand: op, Offset: *p}
+func Wide(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
+	bc = &ByteCode{Operand: op, Offset: *p}
 
 	// TODO: binary.Read is overkill here. could be io.Read
 	inst := []byte{0}
-	err := binary.Read(r, binary.BigEndian, inst)
-	if err != nil {
-		return nil, err
+	if err = binary.Read(r, binary.BigEndian, inst); err != nil {
+		return
 	}
 
 	index := []byte{0, 0}
-	err = binary.Read(r, binary.BigEndian, index)
-	if err != nil {
-		return nil, err
+	if err = binary.Read(r, binary.BigEndian, index);err != nil {
+		return
 	}
 	if inst[0] == 0x84 {
 		c := []byte{0, 0}
 
-		err = binary.Read(r, binary.BigEndian, c)
-		if err != nil {
-			return nil, err
+		if err = binary.Read(r, binary.BigEndian, c); err != nil {
+			return
 		}
-
 		*p = *p + 5
-		return bc, nil
+		return
 	}
 	*p = *p + 3
-	return bc, nil
+	return
 }

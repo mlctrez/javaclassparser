@@ -40,23 +40,32 @@ func (c *FieldInfo) String() string {
 	return fmt.Sprintf("%s %s %s %s", af, name, descriptor, attributes)
 }
 
-func ReadFieldInfo(r cpool.PoolReader) *FieldInfo {
-	fi := &FieldInfo{}
+func ReadFieldInfo(r cpool.PoolReader) (fi *FieldInfo, err error) {
+	fi = &FieldInfo{}
 	fi.Pool = r.ConstantPool
 
-	fi.AccessFlags = aflag.ReadFieldAccessFlags(r)
-
-	failErr(ioutil.ReadUint16(r, &fi.NameIndex))
-	failErr(ioutil.ReadUint16(r, &fi.DescriptorIndex))
+	if fi.AccessFlags, err = aflag.ReadFieldAccessFlags(r); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &fi.NameIndex); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &fi.DescriptorIndex); err != nil {
+		return
+	}
 
 	var count uint16
-	failErr(ioutil.ReadUint16(r, &count))
+	if err = ioutil.ReadUint16(r, &count); err != nil {
+		return
+	}
 	fi.Attributes = make([]interface{}, count)
 	var i uint16
 	for i = 0; i < count; i++ {
-		fi.Attributes[i] = ReadAttributeInfo(r)
+		if fi.Attributes[i], err = ReadAttributeInfo(r); err != nil {
+			return
+		}
 	}
-	return fi
+	return
 }
 
 type SourceFileAttribute struct {
@@ -100,13 +109,19 @@ func (c *CodeAttributeExceptionTable) String() string {
 	return fmt.Sprintf("Start %X End %X Handler %X CatchType %X", c.StartPc, c.EndPc, c.HandlerPc, c.CatchType)
 }
 
-func ReadCodeAttributeExceptionTable(r io.Reader) *CodeAttributeExceptionTable {
-	et := &CodeAttributeExceptionTable{}
-	failErr(ioutil.ReadUint16(r, &et.StartPc))
-	failErr(ioutil.ReadUint16(r, &et.EndPc))
-	failErr(ioutil.ReadUint16(r, &et.HandlerPc))
-	failErr(ioutil.ReadUint16(r, &et.CatchType))
-	return et
+func ReadCodeAttributeExceptionTable(r io.Reader) (et *CodeAttributeExceptionTable, err error) {
+	et = &CodeAttributeExceptionTable{}
+	if err = ioutil.ReadUint16(r, &et.StartPc); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &et.EndPc); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &et.HandlerPc); err != nil {
+		return
+	}
+	err = ioutil.ReadUint16(r, &et.CatchType)
+	return
 }
 
 type ExceptionsAttribute struct {
@@ -122,42 +137,55 @@ func (s *ExceptionsAttribute) String() string {
 	return fmt.Sprintf("%v %v", TypeName(s), el)
 }
 
-func ReadCodeAttribute(r cpool.PoolReader) *CodeAttribute {
-	c := &CodeAttribute{}
-	failErr(ioutil.ReadUint16(r, &c.MaxStack))
-	failErr(ioutil.ReadUint16(r, &c.MaxLocals))
-
-	codes, err := bytecode.Read(r)
-	failErr(err)
-	c.Code = codes
+func ReadCodeAttribute(r cpool.PoolReader) (ca *CodeAttribute, err error) {
+	ca = &CodeAttribute{}
+	if err = ioutil.ReadUint16(r, &ca.MaxStack); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &ca.MaxLocals); err != nil {
+		return
+	}
+	if ca.Code, err = bytecode.Read(r); err != nil {
+		return
+	}
 
 	var exceptionTableLength uint16
-	failErr(ioutil.ReadUint16(r, &exceptionTableLength))
-	c.ExceptionTable = make([]*CodeAttributeExceptionTable, exceptionTableLength)
+	if err = ioutil.ReadUint16(r, &exceptionTableLength); err != nil {
+		return
+	}
+	ca.ExceptionTable = make([]*CodeAttributeExceptionTable, exceptionTableLength)
 	var i uint16
 	for i = 0; i < exceptionTableLength; i++ {
-		c.ExceptionTable[i] = ReadCodeAttributeExceptionTable(r)
+		if ca.ExceptionTable[i], err = ReadCodeAttributeExceptionTable(r); err != nil {
+			return
+		}
 	}
 	var attributesLength uint16
-	c.Attributes = make([]interface{}, attributesLength)
+	ca.Attributes = make([]interface{}, attributesLength)
 	for i = 0; i < attributesLength; i++ {
-		c.Attributes[i] = ReadAttributeInfo(r)
+		if ca.Attributes[i], err = ReadAttributeInfo(r); err != nil {
+			return
+		}
 	}
-	return c
+	return
 }
 
-func ReadAttributeInfo(r cpool.PoolReader) interface{} {
+func ReadAttributeInfo(r cpool.PoolReader) (ai interface{}, err error) {
 
 	var attributeNameIndex uint16
 	var attributeLength uint32
-	failErr(ioutil.ReadUint16(r, &attributeNameIndex))
-	failErr(ioutil.ReadUint32(r, &attributeLength))
 
-	// TODO: optimize for common lengths
+	if err = ioutil.ReadUint16(r, &attributeNameIndex); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint32(r, &attributeLength); err != nil {
+		return
+	}
+
 	info := make([]uint8, attributeLength)
-	failErr(binary.Read(r, binary.BigEndian, &info))
-	lr := bytes.NewReader(info)
+	_, err = io.ReadFull(r, info)
 
+	lr := bytes.NewReader(info)
 	cp := r.ConstantPool
 
 	var attributeName *cpool.ConstantUtf8Info
@@ -170,13 +198,13 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 	case "SourceFile":
 		s := &SourceFileAttribute{}
 		s.Pool = cp
-		failErr(ioutil.ReadUint16(lr, &s.SourceFileIndex))
-		return s
+		err = ioutil.ReadUint16(lr, &s.SourceFileIndex)
+		return s, err
 	case "ConstantValue":
 		c := &ConstantValueAttribute{}
 		c.Pool = cp
-		failErr(ioutil.ReadUint16(lr, &c.ConstantValueIndex))
-		return c
+		err = ioutil.ReadUint16(lr, &c.ConstantValueIndex)
+		return c, err
 	case "Code":
 		lpr := cpool.PoolReader{Reader: lr, ConstantPool: cp}
 		return ReadCodeAttribute(lpr)
@@ -184,13 +212,14 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 		ea := &ExceptionsAttribute{}
 		ea.Pool = cp
 		var numExceptions uint16
-		failErr(ioutil.ReadUint16(lr, &numExceptions))
+		if err = ioutil.ReadUint16(lr, &numExceptions); err != nil {
+			return
+		}
 		ea.Exceptions = make([]uint16, numExceptions)
-		// TODO: optimize
-		failErr(binary.Read(lr, binary.BigEndian, &ea.Exceptions))
-		return ea
+		err = binary.Read(lr, binary.BigEndian, &ea.Exceptions)
+		return ea, err
 	case "EnclosingMethod":
-		// TODO: finish the remainder of these
+		// TODO: finish the remainder of these known ones from the spec
 	case "InnerClasses":
 	case "BootstrapMethods":
 	case "Signature":
@@ -206,9 +235,9 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 	case "MethodParameters":
 
 	case "ScalaInlineInfo":
+		// TODO: are these useful, or should they just be logged and ignored
 	case "Scala":
 	case "ScalaSig":
-
 	case "org.aspectj.weaver.PointcutDeclaration":
 	case "org.aspectj.weaver.MethodDeclarationLineNumber":
 	case "org.aspectj.weaver.AjSynthetic":
@@ -223,11 +252,9 @@ func ReadAttributeInfo(r cpool.PoolReader) interface{} {
 	case "org.aspectj.weaver.Declare":
 
 	default:
-		//if !strings.HasPrefix(attributeName.Value, "org.aspectj") {
 		fmt.Println("unhandled attributeName", attributeName.Value)
-		//}
 	}
-	return nil
+	return
 }
 
 func TypeName(i interface{}) (name string) {
@@ -248,22 +275,33 @@ func (c *MethodInfo) String() string {
 	return fmt.Sprintf("%s %s %s", c.AccessFlags, c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
-func ReadMethodInfo(r cpool.PoolReader) *MethodInfo {
+func ReadMethodInfo(r cpool.PoolReader) (mi *MethodInfo, err error) {
 
-	mi := &MethodInfo{}
+	mi = &MethodInfo{}
 	mi.Pool = r.ConstantPool
-	mi.AccessFlags = aflag.ReadMethodAccessFlags(r)
-	failErr(ioutil.ReadUint16(r, &mi.NameIndex))
-	failErr(ioutil.ReadUint16(r, &mi.DescriptorIndex))
+
+	if mi.AccessFlags, err = aflag.ReadMethodAccessFlags(r); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &mi.NameIndex); err != nil {
+		return
+	}
+	if err = ioutil.ReadUint16(r, &mi.DescriptorIndex); err != nil {
+		return
+	}
 
 	var count uint16
-	failErr(ioutil.ReadUint16(r, &count))
+	if err = ioutil.ReadUint16(r, &count); err != nil {
+		return
+	}
 
 	mi.Attributes = make([]interface{}, count)
 
 	var i uint16
 	for i = 0; i < count; i++ {
-		mi.Attributes[i] = ReadAttributeInfo(r)
+		if mi.Attributes[i], err = ReadAttributeInfo(r); err != nil {
+			return
+		}
 	}
-	return mi
+	return
 }
