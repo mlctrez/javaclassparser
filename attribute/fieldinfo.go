@@ -54,4 +54,3 @@ func ReadFieldInfo(r cpool.PoolReader) (fi *FieldInfo, err error) {
 	}
 	return
 }
-

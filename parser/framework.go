@@ -52,7 +52,7 @@ type Work struct {
 
 	var results []*Work
 	sort.SliceStable(results, DefaultSort(results))
- */
+*/
 func DefaultSort(results []*Work) func(i, j int) bool {
 	return func(i, j int) bool {
 		if results[i].Path != results[j].Path {
@@ -164,8 +164,6 @@ func readArchive(pc *Context, path string, rc *zip.ReadCloser) {
 		rp.Close()
 	}
 }
-
-
 
 func (jcp *Class) DebugOut() {
 
