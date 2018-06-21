@@ -1,11 +1,6 @@
 package cpool
 
-func failErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
+// ConstBase contains commonality across all constants in the constant pool
 type ConstBase struct {
 	Pool ConstantPool
 	Tag  uint8

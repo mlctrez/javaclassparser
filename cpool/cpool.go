@@ -11,6 +11,7 @@ import (
 )
 
 // ConstantPool breaks cyclic dependencies between packages
+// TODO: this may not be needed anymore after recent refactoring
 type ConstantPool interface {
 	Lookup(index uint16) interface{}
 	Visit(func(interface{}))
@@ -23,19 +24,19 @@ type PoolReader struct {
 	ConstantPool
 }
 
-func Read(outerReader io.Reader) (ConstantPool, error) {
+func Read(outerReader io.Reader) (cp ConstantPool, err error) {
 
 	var cpLen uint16
-
-	err := ioutil.ReadUint16(outerReader, &cpLen)
-	if err != nil {
-		return nil, err
+	if err = ioutil.ReadUint16(outerReader, &cpLen); err != nil {
+		return
 	}
 
 	pi := &poolImpl{}
+	cp = pi
+
 	pi.constantPool = make([]interface{}, cpLen)
 
-	r := PoolReader{Reader: outerReader, ConstantPool: pi}
+	r := PoolReader{Reader: outerReader, ConstantPool: cp}
 
 	ts := []byte{0}
 	for i := 1; i < int(cpLen); i++ {
