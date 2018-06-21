@@ -211,7 +211,7 @@ func Wide(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 	}
 
 	index := []byte{0, 0}
-	if err = binary.Read(r, binary.BigEndian, index);err != nil {
+	if err = binary.Read(r, binary.BigEndian, index); err != nil {
 		return
 	}
 	if inst[0] == 0x84 {

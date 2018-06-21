@@ -157,4 +157,3 @@ func (f MethodParameterAccessFlags) String() string {
 	}
 	return strings.Join(mods, " ")
 }
-

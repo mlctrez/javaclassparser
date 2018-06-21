@@ -22,4 +22,3 @@ const ConstantUtf8 = 1
 const ConstantMethodHandle = 15
 const ConstantMethodType = 16
 const ConstantInvokeDynamic = 18
-
