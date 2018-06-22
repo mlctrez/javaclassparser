@@ -21,6 +21,10 @@ func (rb *RefBase) ReadRefBaseIndexes(r io.Reader) (err error) {
 	return
 }
 
+func (rb *RefBase) ClassName() string {
+	return fmt.Sprintf("%s", rb.Pool.Lookup(rb.ClassIndex))
+}
+
 type ConstantFieldrefInfo struct{ RefBase }
 
 func (c *ConstantFieldrefInfo) String() string {
