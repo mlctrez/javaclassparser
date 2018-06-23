@@ -3,29 +3,30 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	ioutil2 "io/ioutil"
+	"io/ioutil"
 	"sort"
 	"strings"
 
-	"github.com/mlctrez/javaclassparser/cpool"
-	"github.com/mlctrez/javaclassparser/ioutil"
 	"github.com/mlctrez/javaclassparser/parser"
 )
 
 func main() {
-	config := &parser.Config{Archive: "sample.zip"}
 
 	// key of class name to
+
 	deps := NewDependencyManager()
 	deps.IncludePrefixes("com/foo")
-	deps.packageOnly = true
-	deps.depth = 3
 
-	reader := ioutil.MustOpenZipReader(config.Archive)
-	parser.Parse(config, reader, deps.WorkCallback)
+	//deps.packageOnly = true
+	//deps.depth = 3
+
+	err := parser.Scan(parser.NewConfigFromArgs(), deps.WorkCallback)
+	if err != nil {
+		panic(err)
+	}
 
 	//deps.Debug()
-	deps.DumpDependencies()
+	//deps.DumpDependencies()
 
 }
 
@@ -49,10 +50,13 @@ func (d *DependencyManager) IncludePrefixes(prefixes ...string) {
 }
 
 func (d *DependencyManager) extractName(name string) string {
-	cn := strings.Split(name, " ")[0]
-	cn = strings.Split(cn, "$")[0]
-	cn = strings.TrimPrefix(cn, "[L")
-	cn = strings.TrimSuffix(cn, ";")
+
+	if d.packageOnly&&d.depth>0 {
+		panic("cannot set packageOnly and depth")
+	}
+
+	cn := parser.ExtractName(name)
+
 	if d.packageOnly && strings.Contains(cn, "/") {
 		cn = cn[0:strings.LastIndex(cn, "/")]
 	}
@@ -96,15 +100,12 @@ func (d *DependencyManager) included(name string) bool {
 
 func (d *DependencyManager) WorkCallback(work *parser.Work) {
 
+	if d.packageOnly && d.depth>0 {
+		panic("cannot set packageOnly and depth together")
+	}
+
 	fromName := d.extractName(work.Class.Name)
-	work.Class.Visit(func(i interface{}) {
-		var toName string
-		if mr, ok := i.(*cpool.ConstantMethodrefInfo); ok {
-			toName = mr.ClassName()
-		}
-		if mr, ok := i.(*cpool.ConstantInterfaceMethodrefInfo); ok {
-			toName = mr.ClassName()
-		}
+	work.Class.RefVisit(func(toName string) {
 		if toName == "" {
 			return
 		}
@@ -147,12 +148,12 @@ func (d *DependencyManager) DumpDependencies() {
 	dm["_count_forward"] = len(d.forward)
 	dm["_count_reverse"] = len(d.reverse)
 	unique := d.Unique()
-	dm["unique"] = unique
+	dm["_unique"] = unique
 	dm["_count_unique"] = len(unique)
 	dm["forward"] = d.forward
 	dm["reverse"] = d.reverse
 	bytes, _ := json.MarshalIndent(dm, "", "  ")
-	ioutil2.WriteFile("deps.json", bytes, 0755)
+	ioutil.WriteFile("deps.json", bytes, 0755)
 }
 
 func dumpMapValueCount(mapName string, m map[string]map[string]uint16) {

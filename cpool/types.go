@@ -18,8 +18,9 @@ func (c *ConstantStringInfo) String() string {
 	return fmt.Sprintf("%s", c.Pool.Lookup(c.StringIndex))
 }
 
-func ReadConstantStringInfo(r PoolReader) (cs *ConstantStringInfo, err error) {
+func ReadConstantStringInfo(r PoolReader, index uint16) (cs *ConstantStringInfo, err error) {
 	cs = &ConstantStringInfo{}
+	cs.Index = index
 	cs.Pool = r.ConstantPool
 	cs.Tag = ConstantString
 	cs.Type = "CONSTANT_String_info"
@@ -36,8 +37,9 @@ func (c *ConstantIntegerInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadConstantIntegerInfo(r PoolReader) (ci *ConstantIntegerInfo, err error) {
+func ReadConstantIntegerInfo(r PoolReader, index uint16) (ci *ConstantIntegerInfo, err error) {
 	ci = &ConstantIntegerInfo{}
+	ci.Index = index
 	ci.Pool = r.ConstantPool
 	ci.Tag = ConstantInteger
 	ci.Type = "CONSTANT_Integer_info"
@@ -54,8 +56,9 @@ func (c *ConstantFloatInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadConstantFloatInfo(r PoolReader) (cf *ConstantFloatInfo, err error) {
+func ReadConstantFloatInfo(r PoolReader, index uint16) (cf *ConstantFloatInfo, err error) {
 	cf = &ConstantFloatInfo{}
+	cf.Index = index
 	cf.Pool = r.ConstantPool
 	cf.Tag = ConstantFloat
 	cf.Type = "CONSTANT_Float_info"
@@ -77,8 +80,9 @@ func (c *ConstantLongInfo) String() string {
 	return fmt.Sprintf("%d", c.Value)
 }
 
-func ReadConstantLongInfo(r PoolReader) (cl *ConstantLongInfo, err error) {
+func ReadConstantLongInfo(r PoolReader, index uint16) (cl *ConstantLongInfo, err error) {
 	cl = &ConstantLongInfo{}
+	cl.Index = index
 	cl.Pool = r.ConstantPool
 	cl.Tag = ConstantLong
 	cl.Type = "CONSTANT_Long_info"
@@ -95,8 +99,9 @@ func (c *ConstantDoubleInfo) String() string {
 	return fmt.Sprintf("%f", c.Value)
 }
 
-func ReadConstantDoubleInfo(r PoolReader) (cd *ConstantDoubleInfo, err error) {
+func ReadConstantDoubleInfo(r PoolReader, index uint16) (cd *ConstantDoubleInfo, err error) {
 	cd = &ConstantDoubleInfo{}
+	cd.Index = index
 	cd.Pool = r.ConstantPool
 	cd.Tag = ConstantDouble
 	cd.Type = "CONSTANT_Double_info"
@@ -114,8 +119,9 @@ func (c *ConstantNameAndTypeInfo) String() string {
 	return fmt.Sprintf("%s %s", c.Pool.Lookup(c.NameIndex), c.Pool.Lookup(c.DescriptorIndex))
 }
 
-func ReadConstantNameAndTypeInfo(r PoolReader) (nat *ConstantNameAndTypeInfo, err error) {
+func ReadConstantNameAndTypeInfo(r PoolReader, index uint16) (nat *ConstantNameAndTypeInfo, err error) {
 	nat = &ConstantNameAndTypeInfo{}
+	nat.Index = index
 	nat.Pool = r.ConstantPool
 	nat.Tag = ConstantNameAndType
 	nat.Type = "CONSTANT_NameAndType_info"
@@ -137,8 +143,9 @@ func (c *ConstantUtf8Info) String() string {
 	return fmt.Sprintf("%s", c.Value)
 }
 
-func ReadConstantUtf8Info(r PoolReader) (u *ConstantUtf8Info, err error) {
+func ReadConstantUtf8Info(r PoolReader, index uint16) (u *ConstantUtf8Info, err error) {
 	u = &ConstantUtf8Info{}
+	u.Index = index
 	u.Pool = r.ConstantPool
 	u.Tag = ConstantUtf8
 	u.Type = "CONSTANT_Utf8_info"

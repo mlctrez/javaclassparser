@@ -3,38 +3,26 @@ package parser
 import (
 	"archive/zip"
 	"bytes"
-	"flag"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mlctrez/javaclassparser/attribute"
 )
 
-// Config contains various flags used while parsing
-type Config struct {
-	Archive         string
-	Class           string
-	PrintArchives   bool
-	PrintClassNames bool
-	PrintMethodRef  bool
-	LogElapsed      bool
-	DebugClass      string
-	Workers         int
-}
-
 // Context manages the input and output work channels and wait groups
 type Context struct {
-	config      *Config
-	work        chan *Work
-	workGroup   *sync.WaitGroup
-	result      chan *Work
-	resultGroup *sync.WaitGroup
+	config *Config
+	work   *WorkChanGroup
+	result *WorkChanGroup
 }
 
 // Work is the communication to and from the workers
@@ -64,47 +52,112 @@ func DefaultSort(results []*Work) func(i, j int) bool {
 }
 
 func parseWorker(pc *Context) {
-	for w := range pc.work {
+	for w := range pc.work.ch {
 		w.Class, w.Error = New(w.ByteCode)
-		pc.resultGroup.Add(1)
-		pc.result <- w
-		pc.workGroup.Done()
+		pc.result.wg.Add(1)
+		pc.result.ch <- w
+		pc.work.wg.Done()
 	}
+}
+
+// Scan reads all class files in the provided config.Archive path
+// if config.Archive is a directory, all jar files within the directory are scanned
+func Scan(config *Config, callback func(*Work)) (err error) {
+	if config.Archive == "" {
+		return errors.New("archive must be provided")
+	}
+
+	var info os.FileInfo
+	if info, err = os.Stat(config.Archive); err != nil {
+		return err
+	}
+
+	if !info.IsDir() {
+		var rc *zip.ReadCloser
+		if rc, err = zip.OpenReader(config.Archive); err != nil {
+			return err
+		}
+		Parse(config, rc, callback)
+		return nil
+	}
+
+	originalArchive := config.Archive
+	defer func() {
+		config.Archive = originalArchive
+	}()
+	return filepath.Walk(config.Archive, func(path string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(info.Name(), ".jar") || strings.HasSuffix(info.Name(), ".ear") || strings.HasSuffix(info.Name(), ".war") {
+			var rc *zip.ReadCloser
+			if rc, err = zip.OpenReader(path); err != nil {
+				return err
+			}
+			config.Archive = path
+			Parse(config, rc, callback)
+		}
+		return nil
+	})
+	return
+}
+
+type WorkChanGroup struct {
+	ch chan *Work
+	wg *sync.WaitGroup
+}
+
+func newWorkChanGroup(channelSize int) (wc *WorkChanGroup) {
+	wc = &WorkChanGroup{}
+	wc.ch = make(chan *Work, channelSize)
+	wc.wg = &sync.WaitGroup{}
+	return wc
 }
 
 // Parse reads all class files in the provided archive and executes the callback for each
 // Order is not guaranteed.
 func Parse(config *Config, rc *zip.ReadCloser, callback func(*Work)) {
 
+	start := time.Now()
+
 	if config.Workers == 0 {
 		config.Workers = runtime.NumCPU()
 	}
 
+	channelSize := config.Workers * 2
+
 	pc := &Context{
-		config:      config,
-		work:        make(chan *Work),
-		workGroup:   &sync.WaitGroup{},
-		result:      make(chan *Work),
-		resultGroup: &sync.WaitGroup{},
+		config: config,
+		work:   newWorkChanGroup(channelSize),
+		result: newWorkChanGroup(channelSize),
+		//work:        make(chan *Work, channelSize),
+		//workGroup:   &sync.WaitGroup{},
+		//result:      make(chan *Work, channelSize),
+		//resultGroup: &sync.WaitGroup{},
 	}
 
 	for i := 0; i < config.Workers; i++ {
 		go parseWorker(pc)
 	}
 
+	var total uint16
+
 	go func() {
-		for w := range pc.result {
+		for w := range pc.result.ch {
+			total++
 			callback(w)
-			pc.resultGroup.Done()
+			pc.result.wg.Done()
 		}
 	}()
 	readArchive(pc, config.Archive, rc)
 
-	pc.workGroup.Wait()
-	close(pc.work)
+	pc.work.wg.Wait()
+	close(pc.work.ch)
 
-	pc.resultGroup.Wait()
-	close(pc.result)
+	pc.result.wg.Wait()
+	close(pc.result.ch)
+
+	if config.LogElapsed {
+		fmt.Printf("%05d classes scanned in %08.5f sec from %s\n",
+			total, time.Since(start).Seconds(), config.Archive)
+	}
 }
 
 func readArchive(pc *Context, path string, rc *zip.ReadCloser) {
@@ -158,8 +211,8 @@ func readArchive(pc *Context, path string, rc *zip.ReadCloser) {
 				fmt.Println("reading", f.Name)
 			}
 
-			pc.workGroup.Add(1)
-			pc.work <- &Work{Path: path, ByteCode: bb, Config: pc.config}
+			pc.work.wg.Add(1)
+			pc.work.ch <- &Work{Path: path, ByteCode: bb, Config: pc.config}
 
 		}
 		rp.Close()
@@ -213,24 +266,3 @@ func (jcp *Class) DebugOut() {
 	}
 
 }
-
-func NewConfigFromArgs() (config *Config) {
-	config = &Config{}
-
-	flag.StringVar(&config.Archive, "archive", "", "the war, jar or ear archive to scan")
-	flag.StringVar(&config.Class, "class", "", "only display information about this class")
-	flag.BoolVar(&config.PrintArchives, "pa", false, "print each archive name as it is read")
-	flag.BoolVar(&config.PrintClassNames, "pc", false, "print each class name as it is read")
-	flag.BoolVar(&config.PrintMethodRef, "pmr", false, "print method ref information")
-	flag.BoolVar(&config.LogElapsed, "le", true, "log total elapsed time")
-	flag.StringVar(&config.DebugClass, "dbc", "", "dump detailed byte code information for this class")
-
-	flag.Parse()
-
-	if config.Archive == "" {
-		fmt.Println("archive is required")
-		os.Exit(1)
-	}
-	return config
-}
-

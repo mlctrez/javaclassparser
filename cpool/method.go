@@ -10,8 +10,9 @@ type ConstantMethodHandleInfo struct {
 	ReferenceIndex uint16
 }
 
-func ReadConstantMethodHandleInfo(r PoolReader) (mh *ConstantMethodHandleInfo, err error) {
+func ReadConstantMethodHandleInfo(r PoolReader, index uint16) (mh *ConstantMethodHandleInfo, err error) {
 	mh = &ConstantMethodHandleInfo{}
+	mh.Index = index
 	mh.Pool = r.ConstantPool
 	mh.Tag = ConstantMethodHandle
 	mh.Type = "CONSTANT_MethodHandle_info"
@@ -27,8 +28,9 @@ type ConstantMethodTypeInfo struct {
 	DescriptorIndex uint16
 }
 
-func ReadConstantMethodTypeInfo(r PoolReader) (mt *ConstantMethodTypeInfo, err error) {
+func ReadConstantMethodTypeInfo(r PoolReader, index uint16) (mt *ConstantMethodTypeInfo, err error) {
 	mt = &ConstantMethodTypeInfo{}
+	mt.Index = index
 	mt.Pool = r.ConstantPool
 	mt.Tag = ConstantMethodType
 	mt.Type = "CONSTANT_MethodType_info"
@@ -42,8 +44,9 @@ type ConstantInvokeDynamicInfo struct {
 	NameAndTypeIndex        uint16
 }
 
-func ReadConstantInvokeDynamicInfo(r PoolReader) (cid *ConstantInvokeDynamicInfo, err error) {
+func ReadConstantInvokeDynamicInfo(r PoolReader, index uint16) (cid *ConstantInvokeDynamicInfo, err error) {
 	cid = &ConstantInvokeDynamicInfo{}
+	cid.Index = index
 	cid.Pool = r.ConstantPool
 	cid.Tag = ConstantInvokeDynamic
 	cid.Type = "CONSTANT_InvokeDynamic_info"

@@ -1,13 +1,16 @@
 package parser
 
 import (
-	"fmt"
-	"io"
+"fmt"
+"io"
 
-	"github.com/mlctrez/javaclassparser/aflag"
-	"github.com/mlctrez/javaclassparser/attribute"
-	"github.com/mlctrez/javaclassparser/cpool"
-	"github.com/mlctrez/javaclassparser/ioutil"
+
+
+"github.com/mlctrez/javaclassparser/aflag"
+"github.com/mlctrez/javaclassparser/attribute"
+"github.com/mlctrez/javaclassparser/cpool"
+"github.com/mlctrez/javaclassparser/ioutil"
+
 )
 
 // It's all at the following link
@@ -162,11 +165,33 @@ type Class struct {
 	methods             []*attribute.MethodInfo
 	attributes          []interface{}
 
-	// calculated fields
+	// Name is the class name
 	Name       string
+	// SuperClass is the super class name
 	SuperClass string
 }
 
 func (jcp *Class) Visit(f func(interface{})) {
 	jcp.pool.Visit(f)
+}
+
+func (jcp *Class) RefVisit(f func(className string)) {
+	jcp.Visit(func(i interface{}) {
+		var toName string
+		if mr, ok := i.(*cpool.ConstantMethodrefInfo); ok {
+			toName = mr.ClassName()
+		}
+		if mr, ok := i.(*cpool.ConstantInterfaceMethodrefInfo); ok {
+			toName = mr.ClassName()
+		}
+		if toName != "" {
+			f(ExtractName(toName))
+		}
+	})
+	for _, iidx := range jcp.interfaces {
+		lookup := jcp.pool.Lookup(iidx)
+		if s, ok := lookup.(*cpool.ConstantClassInfo); ok {
+			f(ExtractName(s.String()))
+		}
+	}
 }

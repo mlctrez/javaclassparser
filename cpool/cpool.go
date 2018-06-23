@@ -39,40 +39,41 @@ func Read(outerReader io.Reader) (cp ConstantPool, err error) {
 	r := PoolReader{Reader: outerReader, ConstantPool: cp}
 
 	ts := []byte{0}
-	for i := 1; i < int(cpLen); i++ {
+	var i uint16
+	for i = 1; i < cpLen; i++ {
 		if _, err := io.ReadFull(r, ts); err != nil {
 			return nil, err
 		}
 		tag := ts[0]
 		switch tag {
 		case ConstantClass:
-			pi.constantPool[i], err = ReadConstantClassInfo(r)
+			pi.constantPool[i], err = ReadConstantClassInfo(r, i)
 		case ConstantFieldref:
-			pi.constantPool[i], err = ReadConstantFieldrefInfo(r)
+			pi.constantPool[i], err = ReadConstantFieldrefInfo(r, i)
 		case ConstantMethodref:
-			pi.constantPool[i], err = ReadConstantMethodrefInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodrefInfo(r, i)
 		case ConstantInterfaceMethodref:
-			pi.constantPool[i], err = ReadConstantInterfaceMethodrefInfo(r)
+			pi.constantPool[i], err = ReadConstantInterfaceMethodrefInfo(r, i)
 		case ConstantString:
-			pi.constantPool[i], err = ReadConstantStringInfo(r)
+			pi.constantPool[i], err = ReadConstantStringInfo(r, i)
 		case ConstantInteger:
-			pi.constantPool[i], err = ReadConstantIntegerInfo(r)
+			pi.constantPool[i], err = ReadConstantIntegerInfo(r, i)
 		case ConstantFloat:
-			pi.constantPool[i], err = ReadConstantFloatInfo(r)
+			pi.constantPool[i], err = ReadConstantFloatInfo(r, i)
 		case ConstantLong:
-			pi.constantPool[i], err = ReadConstantLongInfo(r)
+			pi.constantPool[i], err = ReadConstantLongInfo(r, i)
 		case ConstantDouble:
-			pi.constantPool[i], err = ReadConstantDoubleInfo(r)
+			pi.constantPool[i], err = ReadConstantDoubleInfo(r, i)
 		case ConstantNameAndType:
-			pi.constantPool[i], err = ReadConstantNameAndTypeInfo(r)
+			pi.constantPool[i], err = ReadConstantNameAndTypeInfo(r, i)
 		case ConstantUtf8:
-			pi.constantPool[i], err = ReadConstantUtf8Info(r)
+			pi.constantPool[i], err = ReadConstantUtf8Info(r, i)
 		case ConstantMethodHandle:
-			pi.constantPool[i], err = ReadConstantMethodHandleInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodHandleInfo(r, i)
 		case ConstantMethodType:
-			pi.constantPool[i], err = ReadConstantMethodTypeInfo(r)
+			pi.constantPool[i], err = ReadConstantMethodTypeInfo(r, i)
 		case ConstantInvokeDynamic:
-			pi.constantPool[i], err = ReadConstantInvokeDynamicInfo(r)
+			pi.constantPool[i], err = ReadConstantInvokeDynamicInfo(r, i)
 		default:
 			panic("unknown tag in constantPool : " + strconv.Itoa(int(tag)))
 		}
@@ -100,6 +101,7 @@ type poolImpl struct {
 	constantPool []interface{}
 }
 
+// TODO: provide means to get all constants of a specific type
 func (cp *poolImpl) Lookup(index uint16) interface{} {
 	return cp.constantPool[index]
 }
