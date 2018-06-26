@@ -126,10 +126,10 @@ func TableSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
 		return nil, err
 	}
-	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
+	if err = ioutil.ReadInt32(r, &lowByte); err != nil {
 		return nil, err
 	}
-	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
+	if err = ioutil.ReadInt32(r, &highByte); err != nil {
 		return nil, err
 	}
 
