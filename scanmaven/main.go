@@ -17,7 +17,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = exec.Command("go", "build", "-o", "jcp", "cli/jcp/main.go").CombinedOutput()
+	_, err = exec.Command("go", "build", "-o", "jcp_bin", "cli/jcp/main.go").CombinedOutput()
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +30,7 @@ func main() {
 		}
 
 		if strings.HasSuffix(path, ".jar") {
-			bytes, err := exec.Command("./jcp", "-archive", path).CombinedOutput()
+			bytes, err := exec.Command("./jcp_bin", "-archive", path).CombinedOutput()
 
 			output := strings.TrimSpace(string(bytes))
 			if strings.Contains(output, "unhandled attribute") {

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"archive/zip"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/mlctrez/javaclassparser/cpool"
 	"github.com/mlctrez/javaclassparser/parser"
@@ -46,20 +44,11 @@ func main() {
 
 	config := NewConfigFromArgs()
 
-	start := time.Now()
-
-	rc, err := zip.OpenReader(config.Archive)
-	failErr(err)
-
 	results := make([]*parser.Work, 0)
-	parser.Parse(config, rc, func(work *parser.Work) {
+	parser.Scan(config, func(work *parser.Work) {
 		results = append(results, work)
 	})
 
-	if config.LogElapsed {
-		fmt.Printf("%05d classes scanned in %08.5f sec from %s\n",
-			len(results), time.Since(start).Seconds(), config.Archive)
-	}
 	sort.SliceStable(results, parser.DefaultSort(results))
 
 	prefixes := []string{"com/"}

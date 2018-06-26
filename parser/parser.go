@@ -1,7 +1,7 @@
 package parser
 
 import (
-"fmt"
+	"fmt"
 "io"
 
 
@@ -21,6 +21,7 @@ import (
 func New(r io.Reader) (jcp *Class, err error) {
 
 	jcp = &Class{}
+
 	if err = jcp.readID(r); err != nil {
 		return
 	}

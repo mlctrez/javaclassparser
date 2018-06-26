@@ -66,17 +66,13 @@ func Simple(op string, c *Context) (*ByteCode, error) {
 	return &ByteCode{Operand: op, Offset: *c.p}, nil
 }
 
-func WithArgs(op string, c *Context, index bool, count int) (*ByteCode, error) {
-	bc := &ByteCode{Operand: op, Offset: *c.p, IndexByte: index, Arguments: make([]byte, count)}
-	cnt, err := io.ReadFull(c, bc.Arguments)
-	if err != nil {
+func WithArgs(op string, c *Context, index bool, count int) (bc *ByteCode, err error) {
+	bc = &ByteCode{Operand: op, Offset: *c.p, IndexByte: index, Arguments: make([]byte, count)}
+	if _, err = io.ReadFull(c, bc.Arguments); err != nil {
 		return nil, err
 	}
-	if count != cnt {
-		return nil, fmt.Errorf("expected %d bytes but only read %d", count, cnt)
-	}
 	*c.p = *c.p + uint32(count)
-	return bc, nil
+	return
 }
 
 func (bc ByteCode) String() string {
@@ -126,13 +122,14 @@ func TableSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 	var defaultByte int32
 	var lowByte int32
 	var highByte int32
-	if err = binary.Read(r, binary.BigEndian, &defaultByte); err != nil {
+
+	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(r, binary.BigEndian, &lowByte); err != nil {
+	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(r, binary.BigEndian, &highByte); err != nil {
+	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
 		return nil, err
 	}
 
@@ -145,7 +142,8 @@ func TableSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 
 	for i := 0; i < int(jumpCodeLength); i++ {
 		var jumpCode int32
-		if err = binary.Read(r, binary.BigEndian, &jumpCode); err != nil {
+
+		if err = ioutil.ReadInt32(r, &jumpCode); err != nil {
 			return nil, err
 		}
 		jumpCodes = append(jumpCodes, jumpCode)
@@ -174,10 +172,10 @@ func LookupSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 
 	var defaultByte int32
 	var nPairs int32
-	if err = binary.Read(r, binary.BigEndian, &defaultByte); err != nil {
+	if err = ioutil.ReadInt32(r, &defaultByte); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(r, binary.BigEndian, &nPairs); err != nil {
+	if err = ioutil.ReadInt32(r, &nPairs); err != nil {
 		return nil, err
 	}
 	if nPairs < 0 {
@@ -187,11 +185,11 @@ func LookupSwitch(op string, p *uint32, r io.Reader) (bc *ByteCode, err error) {
 
 	for i := 0; i < int(nPairs); i++ {
 		var match int32
-		if err = binary.Read(r, binary.BigEndian, &match); err != nil {
+		if err = ioutil.ReadInt32(r, &match); err != nil {
 			return nil, err
 		}
 		var offset int32
-		if err = binary.Read(r, binary.BigEndian, &offset); err != nil {
+		if err = ioutil.ReadInt32(r, &offset); err != nil {
 			return nil, err
 		}
 		matchOffsets = append(matchOffsets, MatchOffset{Match: match, Offset: offset})
