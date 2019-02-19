@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/mlctrez/javaclassparser/parser"
@@ -15,7 +16,7 @@ func main() {
 		config.MatchTarget = strings.Replace(config.MatchTarget, ".", "/", -1)
 	}
 
-	parser.Scan(config, func(work *parser.Work) {
+	err := parser.Scan(config, func(work *parser.Work) {
 
 		matched := make(map[string]bool)
 
@@ -27,7 +28,7 @@ func main() {
 				return
 			}
 
-			key := fmt.Sprintf("%-100s %s",n,className)
+			key := fmt.Sprintf("%-100s %s", n, className)
 
 			if !matched[key] {
 				matched[key] = true
@@ -36,4 +37,8 @@ func main() {
 
 		})
 	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
